@@ -1,0 +1,165 @@
+<html>
+
+    <head>
+      <!-- <script type="text/javascript" src="jquery.timepicker.js"></script> -->
+<!-- datepicker from https://jqueryui.com/datepicker/#animation -->
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Blockchain based Lottery</title>
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <link rel="stylesheet" type="text/css" href="/lib/ph-buttons.css">
+      <link rel="stylesheet" type="text/css" href="/lib/pretty.css">
+      <link rel="stylesheet" type="text/css" href="/lib/flattable.css">
+      <!-- <link rel="stylesheet" type="text/css" href="/lib/checkbox.css"> -->
+
+      <script type="text/javascript" src="/lib/sjcl.js"></script>
+      <script type="text/javascript" src="/lib/random-event-name.js"></script>
+      <script type="text/javascript" src="/lib/random-name.js"></script>
+      <script type="text/javascript" src="/lib/default-script.js"></script>
+
+      <script type="text/javascript" src="/lib/init.js"></script>
+      <script type="text/javascript" src="/lib/fabric-click.js"></script>
+      <script type="text/javascript" src="/lib/spin.js"></script>
+      <script type="text/javascript" src="/lib/jStat.js"></script>
+      <script type="text/javascript" src="/lib/future-block.js"></script>
+
+    <!-- Datetime picker from https://nehakadam.github.io/DateTimePicker/ -->
+      <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/datetimepicker/latest/DateTimePicker.min.css" />
+      <script type="text/javascript" src="//cdn.jsdelivr.net/datetimepicker/latest/DateTimePicker.min.js"></script>  
+
+      <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
+
+
+<script type="text/javascript" charset="utf-8">
+
+    $("#cc")
+
+</script>
+
+</head>
+
+<body>
+  <div id="main">
+    <div id="header">
+      <div id="logo">
+        <div id="logo_text">
+          <!-- class="logo_colour", allows you to change the colour of the text -->
+        <h1><a href="index.html"><span class="logo_colour">Lottery on Blockchain</span></a></h1>
+          <h2>Open your own lottery event on blockchain!</h2>
+        </div>
+      </div>
+  <div id="menubar">
+        <ul id="menu">
+          <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
+          <li><a href="index.html">Introduction</a></li>
+          <li><a href="subscribe.html">Subscribe</a></li>
+          <li class="selected"><a href="open-lottery.html">Open Lottery</a></li>
+          <li><a href="verify.html">Check & Verify</a></li>
+          <li><a href="admin.html">admin</a></li>
+      </ul>
+    </div>
+
+    <div id="site_content">
+      <div id="content">
+
+    <h3>Register your lottery event</h3>
+    <p>Here, you can register your own lottery event. This information is distributed into certified nodes(called peer) of hyperledger/fabric blockchain network. After registering lottery event successfully, you can keep all the details provided as manifest file with json format. And This file is used to determine winner and verify the result</p>
+    <!-- <script type="text/javascript" charset="utf-8">
+        $("#lottery_details").click(function(event) {
+            event.preventDefault();
+
+            /* get the action attribute from the <form action=""> element */
+            var $form = $( this ),
+                url = $form.attr( 'action' );
+
+            /* Send the data using post with element id name and name2*/
+            var posting = $.post( url, {
+                CAHostAddress: $('#CAHostAddress').val(),
+                EnrollmentID: $('#EnrollmentID').val(),
+                EnrollmentSecret: $('#EnrollmentSecret').val()
+            } );
+
+            /* Alerts the results */
+            posting.done(function( data ) {
+                sweetAlert(data);
+            });
+
+        });
+    </script> -->
+    <form  id="lottery_details" action="/register-lottery" method="post" onsubmit="return validateForm()" enctype="multipart/form-data">
+        <fieldset>
+            <legend><strong><h3>Lottery Details</h3></strong></legend>
+             <label class="btn-align" for="EventName"><b>Event Name</b></label>
+             <input type="text"  id="EventName" name="EventName" size="20" placeholder="Enter the name of event" required />
+
+             <!--  DateTime Input  -->
+             <div>
+                <div id="dtBox"></div>
+                <label class="btn-align" for="IssueDate"><b>Issue Date</b></label>
+                <input type="text" id="IssueDate" name="IssueDate" data-field="datetime" placeholder="When do you want to open?" required readonly/>
+
+                <label class="btn-align" for="DateTime"><b>Due Date</b></label>
+                <input type="text" id="DateTime" name="DateTime" data-field="datetime" placeholder="When do you want to close?" required readonly/>
+
+                <label class="btn-align" for="AnnouncementDate"><b>Announcement Date</b></label>
+                <input type="text" id="AnnouncementDate" name="AnnouncementDate" data-field="datetime" placeholder="When do you want result?" required readonly/>
+                <label class="btn-align" for="fblock"><b>Future Block</b></label>
+                <input type="text" id="fblock" name="fblock"  placeholder="Future target block" readonly required />
+                <a id="btn_block" class='ph-button ph-btn-grey ph-float ph-form-btn'>Fetch</a>
+            </div>
+
+            <div>
+                <label class="btn-align" for="numOfMembers"><b># of Members</b></label>
+
+                <input type="text"  id="numOfMembers" name="numOfMembers" size="20" placeholder="Enter the number of members" required />
+                <br />
+                <label class="btn-align" for="numOfWinners"><b># of Winners</b></label>
+                <input type="text" id="numOfWinners" name="numOfWinners" size="20" placeholder="Enter the number of winners" required />
+                <label class="btn-align" for="RandomKey"><b>Random Key</b></label>
+
+                <input type="text"  id="RandomKey" name="RandomKey" size="39" placeholder="nonce" required />
+            </div>
+
+            <br /><br /><br /> <br />
+            <!-- MemberList field is not needed yet,,, -->
+            <div>
+                <br />
+                <label class="btn-align" for="MemberList"><b>Member List</b></label>
+                <br />
+                <textarea id="MemberList" placeholder="Enter Member Names here...(comma separated list)" name="MemberList" rows="4" cols="70" name="comment" form="lottery_details" disabled></textarea>
+
+            </div>
+            <div id="ManifestHash">
+                <label class="btn-align" for="RandomKey"><b>Manifest Hash</b></label><br />
+                <input type="text"  id="manihash" name="ManifestHash" size="60" placeholder="hash" required readonly />
+            </div>
+            <br />
+            <div id="form_btn_panel">
+                <input id="btn_submit" type="submit" class='ph-button ph-btn-grey ph-float ph-form-btn' value="Register" />
+                <a id="btn_rand" class='ph-button ph-btn-grey ph-float ph-form-btn'>Random</a>
+                <!-- <a id="btn_check" class='ph-button ph-btn-grey ph-float ph-form-btn'>Check</a> -->
+                <!-- <a id="btn_verify" class='ph-button ph-btn-grey ph-float ph-form-btn'>Verify</a> -->
+                <!-- <a href="/inputmanifests/test.json" download="test.json">
+                    Download
+                    [><a id="btn_donwload" class='ph-button ph-btn-grey ph-float ph-form-btn'>Download</a><]
+                    [><img border="0" src="/images/myw3schoolsimage.jpg" alt="W3Schools" width="104" height="142"><]
+                </a> -->
+            </div>
+            <br />
+            <div id="manifest" style="font-size:12px;">
+                Hey!
+            </div>
+
+         </fieldset>
+      </div>
+
+     </div>
+ </form>
+    <div id="footer">
+      Copyright &copy; Yongrae Jo | <a href="mailto:memex@postech.ac.kr">email</a> | <a href="http://www.html5webtemplates.co.uk">design from HTML5webtemplates.co.uk</a>
+    </div>
+ </div>
+   </body>
+<

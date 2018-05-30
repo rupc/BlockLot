@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Lottery on Blockchain</title>
+  <meta name="description" content="website description" />
+  <meta name="keywords" content="website keywords, website keywords" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js"></script>
+
+  <!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> -->
+  <script src="/node_modules/sweetalert/dist/sweetalert.min.js"></script>
+  <link rel="stylesheet" href="/node_modules/sweetalert/dist/sweetalert.css">
+
+  <link rel="stylesheet" type="text/css" href="/style/style.css" title="style" />
+  <link rel="stylesheet" type="text/css" href="/style/fish.css" title="style" />
+
+  <link rel="stylesheet" href="//cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="//cdn.datatables.net/select/1.2.2/css/select.dataTables.min.css">
+  <script type="text/javascript" src="/lib/spin.js"></script>
+  <script type="text/javascript" src="/lib/sjcl.js"></script>
+  <script type="text/javascript" src="/lib/subscribe.js"></script>
+  <!-- <script type="text/javascript" src="/style/fish.js"></script> -->
+
+<link  href="http://fonts.googleapis.com/css?family=Cabin:400,500,600,bold" rel="stylesheet" type="text/css" >
+
+<link  href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow:regular,bold" rel="stylesheet" type="text/css" >
+  <link rel="stylesheet" type="text/css" href="/lib/subscribe-btn.css" />
+
+</head>
+
+<body>
+  <div id="main">
+    <div id="header">
+      <div id="logo">
+        <div id="logo_text">
+          <!-- class="logo_colour", allows you to change the colour of the text -->
+        <h1><a href="index.html"><span class="logo_colour">Lottery on Blockchain</span></a></h1>
+          <h2>Open your own lottery event on blockchain!</h2>
+</div>
+      </div>
+      <div id="menubar">
+        <ul id="menu">
+          <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
+
+
+          <li><a href="index.html">Introduction</a></li>
+          <li class="selected"><a href="subscribe.html">Subscribe</a></li>
+          <li><a href="open-lottery.html">Open Lottery</a></li>
+          <li><a href="verify.html">Check & Verify</a></li>
+          <li><a href="admin.html">admin</a></li>
+
+        </ul>
+      </div>
+    </div>
+    <div id="site_content">
+      <div id="content">
+        <!-- insert the page content here -->
+
+
+        <!-- <div id="pagegradient"></div> -->
+
+      </div>
+        <a class="SubsBtns button"  id="SeeBtn"  style="margin: 10px;">
+            <span>Query</span>
+        </a>
+        
+        <a class="SubsBtns button" id="SubscribeBtn" style="margin: 10px;">
+            <span>Subscribe</span>
+        
+        </a>
+
+      <div id="allQueryTableReserved" style="margin-top:20px;">
+          <table id="allQueryTable" class="display" cellspacing="1" width="100%" style="margin-top:10px;">
+              <thead>
+                  <tr>
+                      <th></th>
+                      <th>Name</th>
+                      <th>Status</th>
+                      <th>Issue</th>
+                      <th>Due</th>
+                      <th>Announce</th>
+                      <th>Block</th>
+                      <th>Members</th>
+                      <th>Winners</th>
+                      <th>Hash</th>
+                      <th>RandomKey</th>
+                      <th>MemberList</th>
+                      <th>Script</th>
+                      <th>Check</th>
+                      <th>Verify</th>
+                      <th>WinnerList</th>
+                      <th>VerifiableRandomKey</th>
+                  </tr>
+              </thead>
+
+              <tbody>
+                  <tr>
+                      <td></td>
+                      <td>sample-event</td>
+                      <td>Closed</td>
+                      <td>2017-06-30 15:30</td>
+                      <td>2017-07-20 12:00</td>
+                      <td>2017-07-25 13:15</td>
+                      <td>320800</td>
+                      <td>2</td>
+                      <td>1</td>
+                      <td>sha256hash</td>
+                      <td>3421432</td>
+                      <td>Bill,Joy</td>
+                      <td>DefaultScript</td>
+                      <td><button>Check</button></td>
+                      <td><button>Verify</button></td>
+                      <td>Bill</td>
+                      <td>4314,145213,12312,31231</td>
+                  </tr>
+
+              </tbody>
+          </table>
+          <div id="blob" style="margin-top:10px;"><b>Lottery Details</b></div>
+          <div id="ManifestDiv" style="margin-top:10px;"></div>
+      </div>
+<div style="display:none;" id="form">
+
+<div class="fish" id="fish"></div>
+<div class="fish" id="fish2"></div>
+
+<form id="EnrollmentForm" method="post" action="/enrollment" enctype="multipart/form-data">
+
+
+<div class="formgroup" id="name-form">
+    <label for="CAHostAddress">CA Address</label>
+    <input type="text" id="CAHostAddress" name="CAHostAddress" />
+</div>
+<div class="formgroup" id="name-form">
+    <label for="EnrollmentID">Enrollment ID</label>
+    <input type="text" id="EnrollmentID" name="EnrollmentID" />
+</div>
+<div class="formgroup" id="name-form">
+    <label for="EnrollmentSecret">Enrollment Secret</label>
+    <input type="text" id="EnrollmentSecret" name="EnrollmentSecret" />
+</div>
+
+	<input id="EnrollmentSubmit" type="submit" value="Login to join!" />
+</form>
+</div>
+    </div>
+    <div id="footer">
+      Copyright &copy; Yongrae Jo | <a href="mailto:memex@postech.ac.kr">email</a> | <a href="http://www.html5webtemplates.co.uk">design from HTML5webtemplates.co.uk</a>
+    </div>
+  </div>
+</body>
+<

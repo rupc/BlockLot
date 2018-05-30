@@ -1,0 +1,32 @@
+/* http://codepen.io/njessen/pen/naLCv */
+.flat-table {
+  display: block;
+  font-family: sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 115%;
+  overflow: auto;
+  width: auto;
+}
+.flat-table th {
+  background-color: #70c469;
+  color: white;
+  font-weight: normal;
+  padding: 20px 20px;
+  text-align: center;
+}
+.flat-table td {
+  background-color: #eeeeee;
+  color: #6f6f6f;
+  padding: 10px 10px;
+  vertical-align: middle;
+  width:500px;
+  /* text-align:center; */
+}
+
+input[type="radio"] {
+    /* display: table-cell;
+    margin:0px;
+    padding:0px;
+    border-width:0px;
+    left:15px; */
+}

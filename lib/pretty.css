@@ -1,0 +1,192 @@
+/* label {
+  display: inline-block;
+  width: 130px;
+  text-align: left;
+} */
+input {
+    display:inline-block;
+    float:left;
+}
+.btn-align {
+    display: inline-block;
+    float: left;
+    clear: left;
+    width: 130px;
+    text-align: left;
+    margin-left: 10px;
+    margin-top:2px;
+}
+
+#btn_register {
+    display: inline-block;
+    clear: left;
+    height:20px;
+    float:left;
+    margin-top:10px;
+    padding:1px;
+}
+
+#btn_donwload {
+    display: inline-block;
+    clear: left;
+}
+#btn_block {
+    width:50px;
+    height:16px;
+    display: inline-block;
+    margin:0px;
+    padding:0px;
+    padding-top:2px;
+    color:yellow;
+    background-color:magenta;
+}
+#btn_block:hover {
+    background-color: blue;
+}
+
+#btn_random {
+    height: 20px;
+    width: 80px;
+    color:yellow;
+    background-color:magenta;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+#btn_random:active {
+    transform: translateY(4px);
+}
+
+#btn_rand {
+    width : 80px;
+    height: 20px;
+    float:left;
+    display: inline-block;
+}
+
+#btn_submit {
+    height: 25px;
+    width: 80px;
+    color:yellow;
+    background-color:magenta;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+#btn_submit:hover {
+    background-color: blue;
+}
+
+#btn_verify {
+    width : 80px;
+    height: 20px;
+    float:left;
+    display: inline-block;
+}
+
+#btn_check {
+    width : 80px;
+    height: 20px;
+    float:left;
+    display: inline-block;
+}
+
+
+
+h1 {
+    font-size: 160%;
+}
+
+#info {
+    border:3px solid blue;
+    background-color: powderblue;
+    width: 350px;
+    height: 350px;
+    position:relative;
+    left: 180px;
+    /* top: 400px; */
+    bottom:360px;
+    display:inline-block;
+}
+
+
+#lottery_details {
+    width: 500px;
+}
+#interface {
+    display:inline-block;
+    height: 370px;
+}
+#ca_interface {
+    width: 500px;
+}
+#cc_interface {
+    /* border:1px dashed black;
+    width:50%; */
+    /* margin:5px; */
+}
+.firstcol {
+    width:10px;
+}
+/* table, th, td {
+    border: 1px dashed black;
+    border-collapse: collapse;
+    border-spacing: 2px;
+    margin:8px;
+} */
+
+#cc_table {
+    margin:15px;
+}
+hr {
+    margin:15px;
+}
+
+body {
+    background-color:aliceblue;
+}
+.net {
+    position:relative;
+    float: right;
+    left: 220px;
+    top:-350px;
+    /* display: inline-block; */
+}
+.btn-group button {
+    background-color: #4CAF50; /* Green background */
+    border: 1px solid green; /* Green border */
+    color: white; /* White text */
+    padding: 10px 24px; /* Some padding */
+    cursor: pointer; /* Pointer/hand icon */
+    width: 100%; /* Set a width if needed */
+    display: block; /* Make the buttons appear below each other */
+}
+
+.btn-group button:not(:last-child) {
+    border-bottom: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+    background-color: #3e8e41;
+}
+
+.cc {
+    /* filter: brightness(40%);
+    pointer-events: none; */
+}
+
+#manifest {
+    border: 1px dotted black;
+    margin: 30px 4px 15px 10px;
+    height: 290px;
+    width: 480px;
+    font-size: 80%;
+}
+
+#ManifestHash {
+    margin: 5px 4px 0px 0px;
+}
+
