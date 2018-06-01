@@ -1,4 +1,3 @@
-
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 function clickChaininfo() {
     alert("hi");
@@ -16,6 +15,23 @@ function clickChaininfo() {
 
     var channelInfo; // 채널 정보
 
+}
+
+var gPariticipantList;
+
+function clickParticipantinfo() {
+    var participantArray = gPariticipantList.split(",");
+    console.log(gPariticipantList, participantArray.length);
+    var text = "";
+    for (var i = 0; i < participantArray.length; ++i) {
+        text += "" + (i+1) + " " + participantArray[i] + "<br>";
+    }
+    swal({
+        title: '참여자 목록',
+        html: text,
+        // width: 800,
+        showCloseButton: true,
+    });
 }
 
 function clickScript() {
@@ -928,12 +944,18 @@ $(document).ready(function() {
 
             {title:"정보", formatter:printIcon, field:"info", align:"center", width:"4px",headerSort:false, 
                 cellClick:function(e, cell) {
+                    // Failed at passing argument to onclick event
+                    // For remedy this, passing the list globally
+
+                
+                    gPariticipantList = cell.getRow().getData().participantList;
+
                     swal('추첨 행사 정보', 
                         "<b>행사 이름</b>: " + cell.getRow().getData().name + "</br>" +
                         "<b>등록일</b> : " + cell.getRow().getData().issueDate  + "</br>" +
                         "<b>마감일</b> : " + cell.getRow().getData().dueDate  + "</br>" + 
                         "<b>타겟 블록</b> : <a target='_blank'  href='https://blockchain.info/ko/block-height/" + cell.getRow().getData().targetBlock + "'>" + cell.getRow().getData().targetBlock + "</a></br>" +
-                        "<b>참여자</b> : "  + cell.getRow().getData().participantList + "</br>" +
+                        '<b>참여자</b> : <span onclick="clickParticipantinfo()"><i class="fa fa-list-alt"; style="font-size:26px;color:BlueViolet"></i></span></br>' +
                         "<b>우승자</b>: " + cell.getRow().getData().winnerList + "</br>" +
                         "<b>추첨노트(경품)</b> : " + cell.getRow().getData().lotteryNote + "</br>" +
                         "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
