@@ -152,7 +152,7 @@ curl -s -X POST \
 	"chaincodeName":"lottery",
 	"chaincodePath":"github.com/lottery_cc",
 	"chaincodeType": "golang",
-	"chaincodeVersion":"v0"
+	"chaincodeVersion":"v1"
 }'
 ```
 **NOTE:** *chaincodeType* must be set to **node** when node.js chaincode is used and *chaincodePath* must be set to the location of the node.js chaincode. Also put in the $PWD

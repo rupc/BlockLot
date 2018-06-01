@@ -27,6 +27,7 @@ import (
     "github.com/hyperledger/fabric/core/chaincode/shim"
     pb "github.com/hyperledger/fabric/protos/peer"
 
+    "github.com/robertkrimen/otto"
 )
 
 var logger = shim.NewLogger("CLDChaincode")
@@ -76,6 +77,13 @@ type SimpleChaincode struct {
 }
 
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
+    vm := otto.New()
+    vm.Run(`
+    abc = 2 + 2;
+    console.log("The value of abc is " + abc); // 4
+    `)
+
+
     // Inititial data needed for testing
 	fmt.Println("Lottery chaincode(named lottery_cc) Init method called!!!")
 

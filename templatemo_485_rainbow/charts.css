@@ -1,0 +1,47 @@
+.button {
+  left: 50%;
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 9999; position:absolute;
+}
+
+.chart {
+  align-content: center;
+  display: flex;
+  justify-content: center;
+  z-index: 9999; position:absolute;
+}
+
+.modal {
+  text-align: center;
+  z-index: 9999999999; position:absolute;
+}
+
+@media screen and (min-width: 768px) {
+  .modal:before {
+    content: " ";
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+  z-index: 9999999999; position:absolute;
+}
+}
+
+.modal-dialog {
+  display: inline-block;
+  text-align: center;
+  z-index: 9999; position:absolute;
+  vertical-align: middle;
+  z-index: 999999; position:absolute;
+}
+
+.modal-footer {
+  color: #00b5e6;
+  font-size: 25px;
+  z-index: 9999; position:absolute;
+  text-align: center;
+  z-index: 999999; position:absolute;
+}

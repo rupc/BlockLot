@@ -12,10 +12,24 @@ function clickChaininfo() {
     
     var chaincodeID; // 체인코드 이름
     var chaincodeVersion; // 체인코드 버전
-    var peers;
+    var peers; // 피어 주소 목록
 
-    var channelInfo;
+    var channelInfo; // 채널 정보
 
+}
+
+function clickScript() {
+    // alert("h2");
+    // swal({
+            // title: '',
+            // text: '',
+            // type: 'success',
+            // allowOutsideClick: true,
+            // html: true
+        // },
+        // function () {
+            // $('#myModal').modal('show');
+        // });
 }
 
 function searchStringInArray (str, strArray) {
@@ -140,8 +154,21 @@ $(document).ready(function() {
     $("html").css("height", "100%");
     $("body").css("height", "100%");
 
+    google.charts.load("current", {
+        packages: ['corechart']
+    });
+    google.charts.setOnLoadCallback(drawGoogleChart);
+
+    function drawGoogleChart(draw) {
+        $("#chartbtn").click(function() {
+            drawChart();
+        });
+
+    }
+
     var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
-    var hostURL = "http://141.223.121.56:1185";
+    // var hostURL = "http://141.223.121.56:1185";
+    var hostURL = "http://192.168.0.12:1185";
 
     $.ajax({
         url: hostURL + "/query-all-events",
@@ -223,8 +250,8 @@ $(document).ready(function() {
         return "<i class='fa fa-check-square-o' style='font-size:28px;color:BlueViolet'></i>" ;
     };
 
-    var printScriptIcon = function(cell, formatterParams){ //plain text value
-        return "<i class='fa fa-file-code-o'; style='font-size:28px;color:BlueViolet ' ></i>";
+    var printStatistics = function(cell, formatterParams){ //plain text value
+        return "<i class='fa fa-bar-chart-o'; style='font-size:28px;color:BlueViolet ' ></i>";
     };
     var printDrawIcon = function(cell, formatterParams){ //plain text value
         return "<i class='fa fa-chain'; style='font-size:28px;color:BlueViolet'></i>";
@@ -911,8 +938,8 @@ $(document).ready(function() {
                         "<b>추첨노트(경품)</b> : " + cell.getRow().getData().lotteryNote + "</br>" +
                         "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
                         "<b>랜덤키</b> : " + cell.getRow().getData().randomKey + "</br>"  + 
-                        "<b>체인정보</b> : <span onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:Aquamarine'></i></span>"
-                        + ""
+                        "<b>체인정보</b> : <span onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:BlueViolet'></i></span>" + 
+                        ""
                     );
                 }
             },
@@ -926,10 +953,9 @@ $(document).ready(function() {
             {title:"우승자", field:"winnerList", align:"center", width:"8px",headerSort:false},
             {title:"참여자", field:"participantList", align:"center", width:"8px",headerSort:false},
             {title:"추첨 노트", field:"lotteryNote", align:"center", width:"8px",headerSort:false},
-            {title:"추첨 스크립트", field:"script",formatter:printScriptIcon, align:"center", width:"8px",headerSort:false,
+            {title:"통계", field:"script",formatter:printStatistics, align:"center", width:"4px",headerSort:false,
                 cellClick:function(e, cell){
-                    var lotteryScript = cell.getRow().getData().script;
-                    swal(lotteryScript);
+                    document.getElementById('chartbtn').click();
                 }
             },
         ],

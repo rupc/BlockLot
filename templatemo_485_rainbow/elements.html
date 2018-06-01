@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Lottery on Blockchain</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-    <title>Lottery on Blockchain</title>
 <!--
 Rainbow Theme
 http://www.templatemo.com/tm-485-rainbow
@@ -37,7 +40,12 @@ http://www.templatemo.com/tm-485-rainbow
     <script type="text/javascript" charset="utf-8" src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@7.1.0/dist/promise.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/sjcl/1.0.7/sjcl.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
     <script type="text/javascript" src="click.js"></script>
+    <script type="text/javascript" src="charts.js"></script>
+
+    <link rel="stylesheet" type="text/html" href="charts.css">
 
     <style type="text/css" media="all">
         .tabulator-arrow  {
@@ -46,6 +54,7 @@ http://www.templatemo.com/tm-485-rainbow
     </style>
 
     </script>
+        
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -90,8 +99,11 @@ http://www.templatemo.com/tm-485-rainbow
             </div>            
             <!-- 1. Pack -->
             <div id="allQueryTableReserved" style="margin-top:20px;font-weight:bold; font-size:18px;"></div>
-            <i id="openLotteryBtn"class='fa fa-plus-square-o' style=' cursor:pointer; font-size:90px;color:BlueViolet '><font size="9" style="bottom:-100px;"></font></i>
+            <i id="openLotteryBtn"class='fa fa-plus-square-o' style='margin-right:14px;float:left; cursor:pointer; font-size:90px;color:BlueViolet '><font size="9" style="bottom:-100px;"></font></i>
+
+
             <div id="spinner" style="position: fixed; top:50%; left:50%; color: #3ccad1" class="la-ball-running-dots la-2x">
+
                 <div></div>
                 <div></div>
                 <div></div>
@@ -101,6 +113,28 @@ http://www.templatemo.com/tm-485-rainbow
                 <div></div>
             </div>
 
-        
-</body>
-</html>
+            <div class="button">
+                <button style="display:none;" class="btn btn-primary" id="chartbtn" data-toggle="modal" data-target="#myModal" class="myModal"></button>
+            </div>
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            추첨 스크립트의 통계적 검증
+                        </div>
+                        <div class="modal-body">
+                            행사에 사용된 추첨 스크립트가 통계적으로 균일 분포를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 
+                            <div class="chart" id="chart_div"></div>
+                        </div>
+                        <div style="text-align: left;" class="modal-footer">
+                            실험은 클릭할때마다 매번 시행 됩니다.
+                            <div id='png'></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </body>
+    </html>
