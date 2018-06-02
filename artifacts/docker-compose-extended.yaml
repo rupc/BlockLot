@@ -1,0 +1,83 @@
+# Additional peer configuration on Org1
+#
+#
+version: '2'
+
+services:
+
+  peer2.org1.example.com:
+    container_name: peer2.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer2.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer2.org1.example.com:7051
+    ports:
+      - 17051:7051
+      - 17053:7053
+    volumes:
+        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/:/etc/hyperledger/crypto/peer
+
+  peer3.org1.example.com:
+    container_name: peer3.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer3.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer3.org1.example.com:7051
+    ports:
+      - 17056:7051
+      - 17058:7053
+    volumes:
+        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer3.org1.example.com/:/etc/hyperledger/crypto/peer
+
+  peer4.org1.example.com:
+    container_name: peer4.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer4.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer4.org1.example.com:7051
+    ports:
+      - 27056:7051
+      - 27058:7053
+    volumes:
+        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer4.org1.example.com/:/etc/hyperledger/crypto/peer
+
+  peer5.org1.example.com:
+    container_name: peer5.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer5.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer5.org1.example.com:7051
+    ports:
+      - 37056:7051
+      - 37058:7053
+    volumes:
+        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer5.org1.example.com/:/etc/hyperledger/crypto/peer
+
+  peer6.org1.example.com:
+    container_name: peer6.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer6.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer6.org1.example.com:7051
+    ports:
+      - 47056:7051
+      - 47058:7053
+    volumes:
+        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer6.org1.example.com/:/etc/hyperledger/crypto/peer
+
+

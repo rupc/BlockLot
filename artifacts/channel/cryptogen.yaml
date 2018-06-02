@@ -83,7 +83,7 @@ PeerOrgs:
     # name collisions
     # ---------------------------------------------------------------------------
     Template:
-      Count: 2
+      Count: 7
       # Start: 5
       # Hostname: {{.Prefix}}{{.Index}} # default
       SANS:
