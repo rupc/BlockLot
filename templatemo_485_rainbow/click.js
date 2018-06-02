@@ -1,6 +1,5 @@
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 function clickChaininfo() {
-    alert("hi");
     var drawTxID; // 추첨 트랜잭션 ID
     var drawBlockHeight; // 추첨 트랜잭션이 포함된 블록 번호
     var drawBlockInfo; // 추첨 트랜잭션이 포함된 블록 정보
@@ -14,9 +13,38 @@ function clickChaininfo() {
     var peers; // 피어 주소 목록
 
     var channelInfo; // 채널 정보
+    var txidList; // 관련 트랜잭션 리스트
+
+    var text = "";
+
+    var endorsementPolicy = "";
+
+    var ordererInfo = "Solo";
+
+    text = "peer list: " + peers + "<br>" + 
+        "txid list: " + txidList + "<br>" + 
+        "drawTxID: " + drawTxID + "<br>" + 
+        "drawBlock: " + drawBlockHeight + "<br>" + 
+        "openTxID: " + openTxID + "<br>" + 
+        "openTxBlock: " + openBlockHeight + "<br>" + 
+        "chaincodeID: " + chaincodeID + "<br>" + 
+        "chaincodeVersion: " + chaincodeVersion + "<br>" + 
+        "channelName: " + chaincodeVersion + "<br>" + 
+        "endorsementPolicy: " + chaincodeVersion + "<br>" + 
+        "ordererInfo: " + ordererInfo + "<br>" + 
+        
+        ""
+        ;
+
+    swal({
+        title: '체인 정보',
+        html: text,
+        showCloseButton: true
+    });
 
 }
 
+// Globally passed pariticpant lists
 var gPariticipantList;
 
 function clickParticipantinfo() {
@@ -955,12 +983,12 @@ $(document).ready(function() {
                         "<b>등록일</b> : " + cell.getRow().getData().issueDate  + "</br>" +
                         "<b>마감일</b> : " + cell.getRow().getData().dueDate  + "</br>" + 
                         "<b>타겟 블록</b> : <a target='_blank'  href='https://blockchain.info/ko/block-height/" + cell.getRow().getData().targetBlock + "'>" + cell.getRow().getData().targetBlock + "</a></br>" +
-                        '<b>참여자</b> : <span onclick="clickParticipantinfo()"><i class="fa fa-list-alt"; style="font-size:26px;color:BlueViolet"></i></span></br>' +
+                        '<b>참여자</b> : <span style="cursor:pointer;"onclick="clickParticipantinfo()"><i class="fa fa-address-book"; style="font-size:26px;color:Blue"></i></span></br>' +
                         "<b>우승자</b>: " + cell.getRow().getData().winnerList + "</br>" +
                         "<b>추첨노트(경품)</b> : " + cell.getRow().getData().lotteryNote + "</br>" +
                         "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
                         "<b>랜덤키</b> : " + cell.getRow().getData().randomKey + "</br>"  + 
-                        "<b>체인정보</b> : <span onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:BlueViolet'></i></span>" + 
+                        "<b>체인정보</b> : <span style='cursor:pointer;'onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:Blue'></i></span>" + 
                         ""
                     );
                 }
