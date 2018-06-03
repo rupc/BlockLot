@@ -1,5 +1,5 @@
 # TOKEN에 최신 토큰 받아와서 아래에 넣어주기.
-TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1Mjc4MTQxNjcsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI3Nzc4MTY3fQ.PHZZ6nNCrR4TLEI6h3cjVDzb95AQ6jhj9aw3-XHsgB0"
+TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjgwNjk4OTksInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4MDMzODk5fQ.lxddhB-WAI4pQIYkvDB71jjvUMVlRiSvgXGtWnnDIw0"
 
 
 function channels() {
@@ -33,7 +33,7 @@ function chaincodesInstall() {
             "chaincodeName":"lottery",
             "chaincodePath":"github.com/lottery_cc",
             "chaincodeType": "golang",
-            "chaincodeVersion":"v0"
+            "chaincodeVersion":"v4"
         }'
 }
 
@@ -51,11 +51,24 @@ function chaincodesInstantiate() {
         }'
 }
 
+function chaincodesUpgrade() {
+    curl -s -X POST \
+        http://localhost:4000/channels/mychannel/chaincodes/upgrade \
+        -H "authorization: $TOKEN" \
+        -H "content-type: application/json" \
+        -d '{
+            "peers": ["peer0.org1.example.com","peer1.org1.example.com"],
+            "chaincodeName":"lottery",
+            "chaincodeVersion":"v4",
+            "chaincodeType": "golang",
+            "args":[""]
+        }'
+}
 
 
-
-channels
-peers
+# channels
+# peers
 chaincodesInstall
-chaincodesInstantiate
+# chaincodesInstantiate
+chaincodesUpgrade
 
