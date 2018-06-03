@@ -56,6 +56,13 @@ type lottery_event struct {
     Script          string `json:"Script"` // script text for determine_winner()
     VerifiableRandomkey string `json:"VerifiableRandomkey"`
     LotteryNote string `json:"LotteryNote"`
+    DrawTxID string `json:"DrawTxID"`
+    DrawTxTimestamp string `json:"DrawTxTimestamp"`
+    OpenTxID string `json:"OpenTxID"`
+    OpenTxTimestamp string `json:"OpenTxTimestamp"`
+    OpenClientIdentity string `json:"OpenClientIdentity"` // Client identity who open the lottery
+    SubscribeTxIDs string `json:"SubscribeTxID"` // comma seperated txids
+    ChannelID string `json:"ChannelID"`
 }
 
 func (l lottery_event) GetAllConcats() string {
@@ -83,9 +90,14 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     console.log("The value of abc is " + abc); // 4
     `)
 
+    openTxID := stub.GetTxID()
+    chanID := stub.GetChannelID()
+    OpenClientIdentity := stub.GetCreator()
 
     // Inititial data needed for testing
-	fmt.Println("Lottery chaincode(named lottery_cc) Init method called!!!")
+	logger.Info("Lottery chaincode(named lottery_cc) Init method called!!!")
+    logger.Info("Initial test lottery's openTxID: " + openTxID);
+    logger.Info("Channel ID: " + chanID);
 
     sampleRegistered := lottery_event {
         Status: "REGISTERED",
@@ -103,6 +115,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Yongrae`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        OpenTxID: openTxID,
+        ChannelID: chanID,
+        OpenClientIdentity: openIdentity,
     }
 
     sampleRegistered2 := lottery_event {
@@ -121,6 +136,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        OpenTxID: openTxID,
+        ChannelID: chanID,
+        OpenClientIdentity: openIdentity,
     }
 
     sampleRegistered3 := lottery_event {
@@ -139,6 +157,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        OpenTxID: openTxID,
+        ChannelID: chanID,
+        OpenClientIdentity: openIdentity,
     }
 
     sampleRegistered4 := lottery_event {
@@ -157,6 +178,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        OpenTxID: openTxID,
+        ChannelID: chanID,
+        OpenClientIdentity: openIdentity,
     }
 
     sampleEnded := lottery_event {
@@ -175,6 +199,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList: "",
         WinnerList: "UNDEFINED",
         Script: "sampleEnded script1",
+        OpenTxID: openTxID,
+        ChannelID: chanID,
+        OpenClientIdentity: openIdentity,
     }
 
     sampleCheck := lottery_event {
@@ -205,13 +232,13 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
             var block_hash string
 
             if le.FutureBlockHeight == "UNDEFINED" {
-                fmt.Printf("FutureBlockHeight is UNDEFINED\nGetting latest block...\n")
+                logger.Info("FutureBlockHeight is UNDEFINED\nGetting latest block...\n")
                 block = get_latest_block()
                 block_hash = block.hash
             }
 
             if le.InputHash == "UNDEFINED" {
-                fmt.Printf("InputHash or FutureBlockHeight is missing\n")
+                logger.Info("InputHash or FutureBlockHeight is missing\n")
                 return nil
             }
 
@@ -233,7 +260,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
             random bits is built from random key
             random_bits := hex.EncodeToString(sig.Sum(nil))
 
-            fmt.Printf("random bits from hmac: %s\n", random_bits)
+            logger.Info("random bits from hmac: %s\n", random_bits)
 
             num_winners, _ := strconv.Atoi(le.NumOfWinners)
             num_members, _ := strconv.Atoi(le.NumOfMembers)
@@ -266,12 +293,15 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
             print winners
             for i := 0; i < num_winners; i++ {
-                fmt.Printf("%dth: %s\n", hack[hackkeys[i]], hackkeys[i])
+                logger.Info("%dth: %s\n", hack[hackkeys[i]], hackkeys[i])
                 winner_list = append(winner_list, hack[hackkeys[i]])
             }
 
             return winner_list
         }`,
+        OpenTxID: openTxID,
+        ChannelID: chanID,
+        OpenClientIdentity: openIdentity,
     }
 
     jsonBytes, err := json.Marshal(sampleRegistered)
@@ -294,7 +324,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     /* numOfEvents := make([]byte, 1)
     numOfEvents[0] = 2
     err = stub.PutState("numOfEvents", numOfEvents)
-    fmt.Printf("Number of lottery event: %d\n", numOfEvents) */
+    logger.Info("Number of lottery event: %d\n", numOfEvents) */
 
 
 	return shim.Success(nil)
@@ -306,9 +336,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	fmt.Println("Blockchain Lottery Chaincode! invoke method###")
+	logger.Info("Blockchain Lottery Chaincode! invoke method###")
 	function, args := stub.GetFunctionAndParameters()
-	fmt.Println("Invoked method is "+args[0])
+	logger.Info("Invoked method is "+args[0])
 
 	if function != "invoke" {
         return shim.Error("Unknown function call: " + function)
@@ -403,20 +433,24 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 // arg11: lotteryNote
 // TODO: arg11 would be list of presents 
 func (t *SimpleChaincode) create_lottery_event_hash(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("Invoke - create_lottery_event_hash")
+    logger.Info("Invoke - create_lottery_event_hash")
+
     const numOfArgs = 12
     if len(args) != numOfArgs {
         return shim.Error("Incorrect number of arguments. Expecting 11 including function name");
     }
 
     for idx, val := range(args) {
-        fmt.Printf("args[%d]: s%\n", idx, val)
+        logger.Info("args[%d]: s%\n", idx, val)
     }
 
     already, _ := stub.GetState(args[1])
     if len(already) != 0 {
        return shim.Error("Same manifest hash error, use different manifest hash to register event")
     }
+
+    openTxID := stub.GetTxID()
+    chanID := stub.GetChannelID()
 
     le := lottery_event {
         Status: "REGISTERED",
@@ -434,6 +468,8 @@ func (t *SimpleChaincode) create_lottery_event_hash(stub shim.ChaincodeStubInter
         WinnerList: "UNDEFINED",
         Script: args[10],
         LotteryNote: args[11],
+        OpenTxID: openTxID,
+        ChannelID: chanID,
     }
 
     jsonBytes, err := json.Marshal(le)
@@ -441,7 +477,7 @@ func (t *SimpleChaincode) create_lottery_event_hash(stub shim.ChaincodeStubInter
         return shim.Error("lottery event Marshaling fails")
     }
 
-    fmt.Printf("%v\n", le)
+    logger.Info("%v\n", le)
 
     // Insert a lottery event
     err = stub.PutState(le.InputHash, jsonBytes)
@@ -450,27 +486,27 @@ func (t *SimpleChaincode) create_lottery_event_hash(stub shim.ChaincodeStubInter
     /* var numOfEvents int
     numOfEventsJsonBytes, _ := stub.GetState("numOfEvents")
     if numOfEventsJsonBytes == nil {
-        fmt.Printf("Event count is 0, first event created\n")
+        logger.Info("Event count is 0, first event created\n")
         numOfEvents = 0
     }
     err = json.Unmarshal(numOfEventsJsonBytes, &numOfEvents)
     numOfEvents++;
     numOfEventsJsonBytes, _ = json.Marshal(numOfEvents)
     err = stub.PutState("numOfEvents", numOfEventsJsonBytes)
-    fmt.Printf("Number of lottery event: %d\n", numOfEvents)
+    logger.Info("Number of lottery event: %d\n", numOfEvents)
 
     // Add a new event to new list
     var events [MAX_EVENTS]lottery_event // needed to update later to dynamically adjust it
     // events := make([]lottery_event,)
     eventsJsonBytes, _ := stub.GetState("events")
     if eventsJsonBytes == nil {
-        fmt.Printf("Added to event list for the first time")
+        logger.Info("Added to event list for the first time")
     }
     err = json.Unmarshal(eventsJsonBytes, &events)
     events[len(events) - 1] = le
     eventsJsonBytes, err = json.Marshal(events)
     err = stub.PutState("events", eventsJsonBytes)
-    fmt.Printf("Added to event list") */
+    logger.Info("Added to event list") */
 
 
     if err != nil {
@@ -498,7 +534,7 @@ func GetEventListsBytes(stub shim.ChaincodeStubInterface) []byte {
     jsonbytes, err := stub.GetState("events")
 
     json.Unmarshal(jsonbytes, &events)
-    fmt.Printf("%v\n", events)
+    logger.Info("%v\n", events)
     if err != nil {
         return nil
     }
@@ -507,15 +543,15 @@ func GetEventListsBytes(stub shim.ChaincodeStubInterface) []byte {
 }
 
 func (t *SimpleChaincode) query_lottery_event_hash(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("Invoke - query_lottery_event_hash")
+    logger.Info("Invoke - query_lottery_event_hash")
     const numOfArgs = 2
     if len(args) != numOfArgs {
         return shim.Error("Incorrect number of arguments. Expecting 2 including function name");
     }
-    fmt.Println("Given manifest hash(args[1]): " + args[1])
+    logger.Info("Given manifest hash(args[1]): " + args[1])
     jsonbytes, err := stub.GetState(args[1])
 
-    fmt.Println(jsonbytes);
+    logger.Info(jsonbytes);
     if jsonbytes == nil {
         return shim.Error("No event has that name: " + args[1]);
     }
@@ -528,15 +564,15 @@ func (t *SimpleChaincode) query_lottery_event_hash(stub shim.ChaincodeStubInterf
         return shim.Error("Unmarshaling lottery event fails")
     }
 
-    fmt.Printf("%v\n", le)
+    logger.Info("%v\n", le)
     return shim.Success(jsonbytes)
 }
 
 // 7 args: function name, event name, Duedate, # of members, # of winner, comma seperated member list, random key.. but it could be one with long json string
 // Input validation check must be done at server or user
 func (t *SimpleChaincode) create_lottery_event(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	fmt.Println("Invoke - create_lottery_event")
-    fmt.Printf("args[1]:%s\nargs[2]:%s\nargs[3]:%s\nargs[4]:%s\nargs[5]:%s", args[1], args[2], args[3], args[4], args[5], args[6])
+	logger.Info("Invoke - create_lottery_event")
+    logger.Info("args[1]:%s\nargs[2]:%s\nargs[3]:%s\nargs[4]:%s\nargs[5]:%s", args[1], args[2], args[3], args[4], args[5], args[6])
 
     const numOfArgs = 7
     if len(args) != numOfArgs {
@@ -578,8 +614,8 @@ func (t *SimpleChaincode) create_lottery_event(stub shim.ChaincodeStubInterface,
         return shim.Error("lottery event Marshaling fails")
     }
     // print processed input
-    // fmt.Println(string(le))
-    fmt.Printf("%v\n", le)
+    // logger.Info(string(le))
+    logger.Info("%v\n", le)
 
     err = stub.PutState(le.EventName, jsonBytes);
     // or hash as key, which it is more suitable approach
@@ -594,11 +630,11 @@ func (t *SimpleChaincode) create_lottery_event(stub shim.ChaincodeStubInterface,
 
 // 1 args : Lottery event hash 
 func (t *SimpleChaincode) query_lottery_event(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("Invoke: query_lottery_event")
-    fmt.Println("args[1] is " + args[1])
+    logger.Info("Invoke: query_lottery_event")
+    logger.Info("args[1] is " + args[1])
     jsonbytes, err := stub.GetState(args[1])
 
-    fmt.Println(jsonbytes);
+    logger.Info(jsonbytes);
     if jsonbytes == nil {
         return shim.Error("No event has that name: " + args[1]);
     }
@@ -610,7 +646,7 @@ func (t *SimpleChaincode) query_lottery_event(stub shim.ChaincodeStubInterface, 
     if err != nil {
         return shim.Error("Unmarshaling lottery event fails")
     }
-    fmt.Printf("Eventname:%s\nInputHash: %s\n", le.EventName, le.InputHash)
+    logger.Info("Eventname:%s\nInputHash: %s\n", le.EventName, le.InputHash)
     return shim.Success(jsonbytes)
 }
 
@@ -626,12 +662,12 @@ func (t *SimpleChaincode) chaincode_randomized(stub shim.ChaincodeStubInterface,
 * @return Future Block Height
 */
 func (t *SimpleChaincode) create_target_block(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("chaincode: create_target_block invoked")
+    logger.Info("chaincode: create_target_block invoked")
     const numOfArgs = 2
     if len(args) != 2 {
         return shim.Error("Incorrect number of arguments. Expecting 2 including function name, Input hash");
     }
-    fmt.Println("create_target_block: args[1] is " + args[1])
+    logger.Info("create_target_block: args[1] is " + args[1])
 
     // Currently search key is the event name for easy development
     var search_key string = args[1]
@@ -654,7 +690,7 @@ func (t *SimpleChaincode) create_target_block(stub shim.ChaincodeStubInterface, 
 
     // Actually getting future target block
     le.FutureBlockHeight = do_create_target_block(le)
-    fmt.Printf("FutureBlockHeight: %s\n", le.FutureBlockHeight)
+    logger.Info("FutureBlockHeight: %s\n", le.FutureBlockHeight)
 
     jsonBytes, err := json.Marshal(le)
     if err != nil {
@@ -672,7 +708,7 @@ func (t *SimpleChaincode) create_target_block(stub shim.ChaincodeStubInterface, 
 
 func (t *SimpleChaincode) query_target_block(stub shim.ChaincodeStubInterface, args []string) pb.Response {
     // Currently, arg[1] is event name, it will be hash
-    fmt.Println("Invoke: query_target_block")
+    logger.Info("Invoke: query_target_block")
     jsonbytes, err := stub.GetState(args[1])
     if err != nil {
         return shim.Error("Unable to get lottery event")
@@ -682,22 +718,22 @@ func (t *SimpleChaincode) query_target_block(stub shim.ChaincodeStubInterface, a
     if err != nil {
         return shim.Error("Unmarshaling lottery event fails")
     }
-    fmt.Printf("Future Target Block height: %s\n", le.FutureBlockHeight)
+    logger.Info("Future Target Block height: %s\n", le.FutureBlockHeight)
     return shim.Success([]byte(le.FutureBlockHeight))
 }
 
 // args: (0: function_name, 1: Manifest Hash, 2: verifiableRandomkey)
 // args2 is 128 random bits array, 4 32-bit value concatenated by commna
 func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("ChainCode: determine_winner invoked")
+    logger.Info("ChainCode: determine_winner invoked")
     const numOfArgs = 3
     if len(args) != numOfArgs {
         return shim.Error("Incorrect number of arguments. Expecting 3 including function name, manifest hash, random key");
     }
 
-    fmt.Println("args[0]: " + args[0])
-    fmt.Println("args[1]: " + args[1])
-    fmt.Println("args[2]: " + args[2])
+    logger.Info("args[0]: " + args[0])
+    logger.Info("args[1]: " + args[1])
+    logger.Info("args[2]: " + args[2])
 
     // Currently, search key is the event name for easy development NO!
     // Search key is manifest hash, not event name
@@ -723,17 +759,17 @@ func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, arg
 
     // Check if the this operation is already done
     if le.Status == "CHECKED" {
-        fmt.Println("Check operation is not the first time!", "Just returning winner list")
+        logger.Info("Check operation is not the first time!", "Just returning winner list")
         return shim.Success([]byte(le.WinnerList))
     }
 
     // Get the actual winner list
     winner_list, winner_listNames, nonce := do_determine_winner(le)
     encryptedMemberList := strings.Split(le.MemberList, ",")
-    fmt.Printf("winner_list: %s\n", winner_list)
-    fmt.Printf("winner_listNames: %s\n", winner_listNames)
-    fmt.Printf("encryptedMemberList: %s\n", encryptedMemberList)
-    fmt.Printf("nonce: %s\n", nonce)
+    logger.Info("winner_list: %s\n", winner_list)
+    logger.Info("winner_listNames: %s\n", winner_listNames)
+    logger.Info("encryptedMemberList: %s\n", encryptedMemberList)
+    logger.Info("nonce: %s\n", nonce)
     var winner_list_names []string
 
     for i := 0; i < len(winner_list); i++ {
@@ -745,24 +781,29 @@ func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, arg
 
     // Not necessary condition lol
     /* if le.WinnerList != "UNDEFINED" {
-        fmt.Printf("Check operation is the first time!\n")
+        logger.Info("Check operation is the first time!\n")
     } */
 
     if le.Status == "CHECKED" {
-        fmt.Printf("Check operation is not the first time!\n")
+        logger.Info("Check operation is not the first time!\n")
     }
 
-    fmt.Printf("Before asigning WinnerList%v\n", le)
+    logger.Info("Before asigning WinnerList%v\n", le)
     le.WinnerList = winner_concat
-    fmt.Printf("After asigning WinnerList%v\n", le)
+    logger.Info("After asigning WinnerList%v\n", le)
 
-    /* fmt.Printf("Winners: %s\n", winner_concat) */
+    /* logger.Info("Winners: %s\n", winner_concat) */
     logger.Info("Winners: %s\n", winner_concat)
 
     // We will check VerifiableRandomkey is consistent when verifying the result
     le.VerifiableRandomkey = getVerifiableRandomKey(le) + le.GetVerifiableRandomKeyfromLottery();
     logger.Info("VerifiableRandomkey %s", le.VerifiableRandomkey)
     le.Status = "CHECKED"
+
+    // Get draw txid
+    drawTxID := stub.GetTxID()
+    le.DrawTxID = drawTxID
+
     jsonBytes, err := json.Marshal(le)
     if err != nil {
         return shim.Error("lottery event Marshaling fails")
@@ -779,14 +820,14 @@ func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, arg
 }
 
 func (t *SimpleChaincode) verify_result(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("ChainCode: verify_result invoked")
+    logger.Info("ChainCode: verify_result invoked")
     const numOfArgs = 2
     var res string = "true"
     if len(args) != numOfArgs {
         return shim.Error("Incorrect number of arguments. Expecting 2 including function name, manifest hash");
     }
-    fmt.Println("args[0]: " + args[0])
-    fmt.Println("args[1]: " + args[1])
+    logger.Info("args[0]: " + args[0])
+    logger.Info("args[1]: " + args[1])
 
     // Manifest hash
     var search_key string = args[1]
@@ -832,7 +873,7 @@ func (t *SimpleChaincode) query_checkif_winner(stub shim.ChaincodeStubInterface,
 
 func (t *SimpleChaincode) query_winner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
     // Currently, arg[1] is event name, it will be hash
-    fmt.Println("Invoke: query_winner")
+    logger.Info("Invoke: query_winner")
     jsonbytes, err := stub.GetState(args[1])
     if err != nil {
         return shim.Error("Unable to get lottery event")
@@ -842,7 +883,7 @@ func (t *SimpleChaincode) query_winner(stub shim.ChaincodeStubInterface, args []
     if err != nil {
         return shim.Error("Unmarshaling lottery event fails")
     }
-    fmt.Printf("Winner(s): %s\n", le.WinnerList)
+    logger.Info("Winner(s): %s\n", le.WinnerList)
     return shim.Success([]byte(le.WinnerList))
 }
 
@@ -852,7 +893,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 func (t *SimpleChaincode) test_randomness(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("Test randomness")
+    logger.Info("Test randomness")
     s1 := rand.NewSource(time.Now().UnixNano())
     r1 := rand.New(s1)
 
@@ -860,9 +901,9 @@ func (t *SimpleChaincode) test_randomness(stub shim.ChaincodeStubInterface, args
     arbitaryVal1 := r1.Intn(1000)
     arbitaryVal2 := r1.Intn(1000)
 
-    fmt.Printf("Generated two random values: %d %d\n", arbitaryVal1, arbitaryVal2)
-    fmt.Println("Check non-determinism in Hyperledger/Fabric")
-    fmt.Println("test: Same key with different values")
+    logger.Info("Generated two random values: %d %d\n", arbitaryVal1, arbitaryVal2)
+    logger.Info("Check non-determinism in Hyperledger/Fabric")
+    logger.Info("test: Same key with different values")
     stub.PutState(sameKey, []byte(strconv.Itoa(arbitaryVal1)))
     stub.PutState(sameKey, []byte(strconv.Itoa(arbitaryVal2)))
 
@@ -870,7 +911,7 @@ func (t *SimpleChaincode) test_randomness(stub shim.ChaincodeStubInterface, args
 }
 
 func (t *SimpleChaincode) testRandomnessDifferentKeys(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("Test randomness")
+    logger.Info("Test randomness")
     s1 := rand.NewSource(time.Now().UnixNano())
     r1 := rand.New(s1)
     sameValue := []byte{1,2,3,4,5}
@@ -878,9 +919,9 @@ func (t *SimpleChaincode) testRandomnessDifferentKeys(stub shim.ChaincodeStubInt
     arbitaryKey1 := r1.Intn(1000)
     arbitaryKey2 := r1.Intn(1000)
 
-    fmt.Printf("Generated two random keys: %d %d\n", arbitaryKey1, arbitaryKey2)
-    fmt.Println("Check non-determinism in Hyperledger/Fabric")
-    fmt.Println("test: Differenet key with same values")
+    logger.Info("Generated two random keys: %d %d\n", arbitaryKey1, arbitaryKey2)
+    logger.Info("Check non-determinism in Hyperledger/Fabric")
+    logger.Info("test: Differenet key with same values")
 
     stub.PutState(strconv.Itoa(arbitaryKey1), sameValue)
     stub.PutState(strconv.Itoa(arbitaryKey2), sameValue)
@@ -893,7 +934,7 @@ func (t *SimpleChaincode) test_networkaccess(stub shim.ChaincodeStubInterface, a
     block := get_latest_block()
     jsonBytes, err := json.Marshal(block)
 
-    fmt.Printf("%s\n", string(jsonBytes))
+    logger.Info("%s\n", string(jsonBytes))
 
     if err != nil {
         return shim.Error("Error getting Latest Block")
@@ -905,6 +946,6 @@ func (t *SimpleChaincode) test_networkaccess(stub shim.ChaincodeStubInterface, a
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		fmt.Println("Error starting Chaincode: %s", err)
+		logger.Info("Error starting Chaincode: %s", err)
 	}
 }
