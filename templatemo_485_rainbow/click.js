@@ -1,37 +1,46 @@
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
+
+var gLottery;
 function clickChaininfo() {
-    var drawTxID; // 추첨 트랜잭션 ID
+    var drawTxID = gLottery.drawTxID; // 추첨 트랜잭션 ID
     var drawBlockHeight; // 추첨 트랜잭션이 포함된 블록 번호
     var drawBlockInfo; // 추첨 트랜잭션이 포함된 블록 정보
 
-    var openTxID; // 행사 등록 트랜잭션 ID
+    var openTxID = gLottery.openTxID; // 행사 등록 트랜잭션 ID
     var openBlockHeight; // 등록 트랜잭션이 포함된 블록 번호
     var openBlockInfo; // 등록 트랜잭션이 포함된 블록의 정보
+
+    var subscribeTxIDs = gLottery.subscribeTxIDs;
     
     var chaincodeID; // 체인코드 이름
     var chaincodeVersion; // 체인코드 버전
     var peers; // 피어 주소 목록
 
-    var channelInfo; // 채널 정보
+    var channelName = gLottery.channelName; // 채널 정보
     var txidList; // 관련 트랜잭션 리스트
 
     var text = "";
+
+    var openClientIdentity= gLottery.openClientIdentity; // 클라이언트 인증서. 너무 길어서 포함은 아직
 
     var endorsementPolicy = "";
 
     var ordererInfo = "Solo";
 
-    text = "peer list: " + peers + "<br>" + 
-        "txid list: " + txidList + "<br>" + 
-        "drawTxID: " + drawTxID + "<br>" + 
-        "drawBlock: " + drawBlockHeight + "<br>" + 
-        "openTxID: " + openTxID + "<br>" + 
-        "openTxBlock: " + openBlockHeight + "<br>" + 
-        "chaincodeID: " + chaincodeID + "<br>" + 
-        "chaincodeVersion: " + chaincodeVersion + "<br>" + 
-        "channelName: " + chaincodeVersion + "<br>" + 
-        "endorsementPolicy: " + chaincodeVersion + "<br>" + 
-        "ordererInfo: " + ordererInfo + "<br>" + 
+    text = 
+        // "peer list: " + peers + "<br>" + 
+        // "txid list: " + txidList + "<br>" + 
+        "<b>channelName</b>: " + channelName + "<br>" + 
+        "<b>openTxID</b>: " + openTxID + "<br>" + 
+        "<b>drawTxID</b>: " + drawTxID + "<br>" + 
+        "<b>SubscribeTxIDs</b>: " + subscribeTxIDs + "<br>" + 
+        // "<b>openClientIdentity</b>: " + openClientIdentity + "<br>" + 
+        // "drawBlock: " + drawBlockHeight + "<br>" + 
+        // "openTxBlock: " + openBlockHeight + "<br>" + 
+        // "chaincodeID: " + chaincodeID + "<br>" + 
+        // "chaincodeVersion: " + chaincodeVersion + "<br>" + 
+        // "endorsementPolicy: " + endorsementPolicy + "<br>" + 
+        // "ordererInfo: " + ordererInfo + "<br>" + 
         
         ""
         ;
@@ -139,7 +148,7 @@ function formatDatetime(datetime) {
     var hour = datetime.getHours();
     var min = datetime.getMinutes();
     if (min <= 9) min = "" + 0 + min;
-    console.log(year, month, day, hour, min);
+    // console.log(year, month, day, hour, min);
     return year + "-" + month + "-" + day + " " + hour + ":" + min;
 }
 
@@ -265,11 +274,23 @@ $(document).ready(function() {
                     winnerList : obj.WinnerList,
                     participantList : obj.MemberList,
                     script : obj.Script,
-                    lotteryNote : obj.LotteryNote
-
+                    lotteryNote : obj.LotteryNote,
+                    channelID : obj.ChannelID,
+                    openTxID : obj.OpenTxID,
+                    drawTxID : obj.DrawTxID,
+                    subscribeTxIDs : obj.SubscribeTxIDs,
+                    openClientIdentity : obj.OpenClientIdentity,
                 }
-                console.log("target block #", obj.FutureBlockHeight);
-                console.log("randomKey", obj.RandomKey);
+
+                var printQueryInfo = function(obj) {
+                    console.log("target block #", obj.FutureBlockHeight);
+                    console.log("randomKey", obj.RandomKey);
+                    console.log("openTxID", obj.OpenTxID);
+                    console.log("drawTxID", obj.DrawTxID);
+                    console.log("openClientIdentity", obj.OpenClientIdentity);
+                }
+
+                // printQueryInfo();
             }
 
             // Redrwa the table
@@ -977,6 +998,13 @@ $(document).ready(function() {
 
                 
                     gPariticipantList = cell.getRow().getData().participantList;
+                    gLottery = {
+                        drawTxID: cell.getRow().getData().drawTxID,
+                        openTxID: cell.getRow().getData().openTxID,
+                        subscribeTxIDs: cell.getRow().getData().subscribeTxIDs,
+                        channelName: cell.getRow().getData().channelID,
+                        openClientIdentity: cell.getRow().getData().openClientIdentity,
+                    };
 
                     swal('추첨 행사 정보', 
                         "<b>행사 이름</b>: " + cell.getRow().getData().name + "</br>" +

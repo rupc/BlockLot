@@ -33,7 +33,7 @@ function chaincodesInstall() {
             "chaincodeName":"lottery",
             "chaincodePath":"github.com/lottery_cc",
             "chaincodeType": "golang",
-            "chaincodeVersion":"v4"
+            "chaincodeVersion":"v9"
         }'
 }
 
@@ -59,7 +59,7 @@ function chaincodesUpgrade() {
         -d '{
             "peers": ["peer0.org1.example.com","peer1.org1.example.com"],
             "chaincodeName":"lottery",
-            "chaincodeVersion":"v4",
+            "chaincodeVersion":"v9",
             "chaincodeType": "golang",
             "args":[""]
         }'

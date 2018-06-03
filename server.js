@@ -144,7 +144,7 @@ function GetTokenFromSDKServer(identity, orgName) {
 
     var args = {
         data: allData,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
     };
 
     client.post(SDKWebServerAddress + "/users", args, function (data, response) {
@@ -267,7 +267,7 @@ app.post('/subscribe', function(req, res) {
         // parsed response body as js object 
         console.log("data", data);
         var tx_id = data.tx_id_string_;
-        var payload = JSON.stringify(data.payload_);
+        var payload = data.payload_;
 
         console.log("tx_id", tx_id);
         console.log("payload", payload);
@@ -371,9 +371,9 @@ app.post('/draw', function(req, res) {
 
     client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
         var tx_id = data.tx_id_string_;
-        var payload = JSON.stringfy(data.payload_);
+        var payload = data.payload_;
         console.log("transaction id " + tx_id);
-        console.log("payload : " + payload);
+        console.log("payload : " + data.payload_);
         res.write(payload);
         res.end();
     });
@@ -684,8 +684,8 @@ function QueryAllEvents(req, res) {
         headers: { 
             "authorization" : TokenForServer,
             "Content-Type": "application/json" 
-        
-        }
+        },
+        json:true
     };
 
     client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
@@ -704,7 +704,7 @@ function QueryAllEvents(req, res) {
         // }
 
         tx_id = data.tx_id_string_;
-        payload = JSON.stringify(data.payload_);
+        payload = data.payload_;
 
         console.log(payload);
 

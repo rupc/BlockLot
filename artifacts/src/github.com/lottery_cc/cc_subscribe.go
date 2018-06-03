@@ -3,7 +3,7 @@ package main
 import (
     "strings"
     "strconv"
-    "fmt"
+    // "fmt"
     "encoding/json"
     "github.com/hyperledger/fabric/core/chaincode/shim"
     pb "github.com/hyperledger/fabric/protos/peer"
@@ -12,14 +12,14 @@ import (
 // args: (0:function name, 1:Event hash, 2:member name, 3:current time(tiemstamp))
 // Add one member to lottery event specified by manifest hash
 func (t *SimpleChaincode) subscribe(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    fmt.Println("Invoke - subscribe")
+    logger.Info("Invoke - subscribe")
     const numOfArgs = 4
     if len(args) != numOfArgs {
         return shim.Error("Incorrect number of arguments. Expecting 4 including function name");
     }
 
     for idx, val := range(args) {
-        fmt.Printf("args[%d]: s%\n", idx, val)
+        logger.Info("args[%d]: s%\n", idx, val)
     }
 
     // check if event hash is validate one
@@ -54,7 +54,7 @@ func (t *SimpleChaincode) subscribe(stub shim.ChaincodeStubInterface, args []str
         currOfMembers = len(strings.Split(",", le.MemberList))
     }
 
-    fmt.Printf("currOfMembers: %d\n", currOfMembers)
+    logger.Info("currOfMembers: %d\n", currOfMembers)
     // Check the number of members exceeds max#
     maxMembers, _ := strconv.Atoi(le.NumOfMembers)
     if !(currOfMembers < maxMembers) {
@@ -72,9 +72,16 @@ func (t *SimpleChaincode) subscribe(stub shim.ChaincodeStubInterface, args []str
     le.NumOfRegistered = strconv.Itoa(kRegisted + 1)
 
     // kRegisted := currOfMembers + 1
-    fmt.Printf("NumOfRegistered: %s\n", le.NumOfRegistered)
+    logger.Info("NumOfRegistered: %s\n", le.NumOfRegistered)
 
-    fmt.Printf("%v\n", le)
+    subscribeTxID := stub.GetTxID()
+    if le.SubscribeTxIDs == "UNDEFINED" {
+        le.SubscribeTxIDs = subscribeTxID
+    } else {
+        le.SubscribeTxIDs += "," + subscribeTxID
+    }
+
+    logger.Info("%v\n", le)
 
     // Update lottery event
     jsonBytes, err := json.Marshal(le)

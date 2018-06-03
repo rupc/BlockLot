@@ -7,6 +7,7 @@ import (
     // "crypto/hmac"
     // "encoding/binary"
     // "encoding/hex"
+    // "bytes"
     "math/rand"
     // "bufio"
     // "os"
@@ -30,7 +31,7 @@ import (
     "github.com/robertkrimen/otto"
 )
 
-var logger = shim.NewLogger("CLDChaincode")
+var logger = shim.NewLogger("LotteryCC")
 const (
     REGISTERED = 1
     DUED = 2
@@ -60,9 +61,9 @@ type lottery_event struct {
     DrawTxTimestamp string `json:"DrawTxTimestamp"`
     OpenTxID string `json:"OpenTxID"`
     OpenTxTimestamp string `json:"OpenTxTimestamp"`
-    OpenClientIdentity string `json:"OpenClientIdentity"` // Client identity who open the lottery
     SubscribeTxIDs string `json:"SubscribeTxID"` // comma seperated txids
     ChannelID string `json:"ChannelID"`
+    OpenClientIdentity string `json:"OpenClientIdentity"` // Client identity who open the lottery
 }
 
 func (l lottery_event) GetAllConcats() string {
@@ -92,12 +93,14 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
     openTxID := stub.GetTxID()
     chanID := stub.GetChannelID()
-    OpenClientIdentity := stub.GetCreator()
-
+    creatorBytes, _ := stub.GetCreator()
+    openClientIdentity := fmt.Sprintf("%s", creatorBytes)
+    // openClientIdentity := ""
     // Inititial data needed for testing
-	logger.Info("Lottery chaincode(named lottery_cc) Init method called!!!")
-    logger.Info("Initial test lottery's openTxID: " + openTxID);
     logger.Info("Channel ID: " + chanID);
+	logger.Info("LotteryCC Init called")
+    logger.Info("Initial test lottery's openTxID: " + openTxID);
+    logger.Info("ClientIdentity: " + openClientIdentity);
 
     sampleRegistered := lottery_event {
         Status: "REGISTERED",
@@ -117,7 +120,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
-        OpenClientIdentity: openIdentity,
+        OpenClientIdentity: openClientIdentity,
     }
 
     sampleRegistered2 := lottery_event {
@@ -138,7 +141,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
-        OpenClientIdentity: openIdentity,
+        OpenClientIdentity: openClientIdentity,
     }
 
     sampleRegistered3 := lottery_event {
@@ -159,7 +162,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
-        OpenClientIdentity: openIdentity,
+        OpenClientIdentity: openClientIdentity,
     }
 
     sampleRegistered4 := lottery_event {
@@ -180,7 +183,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
-        OpenClientIdentity: openIdentity,
+        OpenClientIdentity: openClientIdentity,
     }
 
     sampleEnded := lottery_event {
@@ -201,7 +204,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleEnded script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
-        OpenClientIdentity: openIdentity,
+        OpenClientIdentity: openClientIdentity,
     }
 
     sampleCheck := lottery_event {
@@ -301,7 +304,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         }`,
         OpenTxID: openTxID,
         ChannelID: chanID,
-        OpenClientIdentity: openIdentity,
+        OpenClientIdentity: openClientIdentity,
     }
 
     jsonBytes, err := json.Marshal(sampleRegistered)
@@ -470,6 +473,8 @@ func (t *SimpleChaincode) create_lottery_event_hash(stub shim.ChaincodeStubInter
         LotteryNote: args[11],
         OpenTxID: openTxID,
         ChannelID: chanID,
+        DrawTxID: "UNDEFINED",
+        SubscribeTxIDs: "UNDEFINED",
     }
 
     jsonBytes, err := json.Marshal(le)
