@@ -36,6 +36,7 @@ var createChannel = require('./app/create-channel.js');
 var join = require('./app/join-channel.js');
 var install = require('./app/install-chaincode.js');
 var instantiate = require('./app/instantiate-chaincode.js');
+var upgrade = require('./app/upgrade-chaincode.js');
 var invoke = require('./app/invoke-transaction.js');
 var query = require('./app/query.js');
 var host = process.env.HOST || hfc.getConfigSetting('host');
@@ -253,6 +254,47 @@ app.post('/channels/:channelName/chaincodes', async function(req, res) {
 	}
 
 	let message = await instantiate.instantiateChaincode(peers, channelName, chaincodeName, chaincodeVersion, chaincodeType, fcn, args, req.username, req.orgname);
+	res.send(message);
+});
+// upgrade chaincode on target peers
+app.post('/channels/:channelName/chaincodes/upgrade', async function(req, res) {
+	logger.debug('==================== upgrade CHAINCODE ==================');
+	var peers = req.body.peers;
+	var chaincodeName = req.body.chaincodeName;
+	var chaincodeVersion = req.body.chaincodeVersion;
+	var channelName = req.params.channelName;
+	var chaincodeType = req.body.chaincodeType;
+	var fcn = req.body.fcn;
+	var args = req.body.args;
+	logger.debug('peers  : ' + peers);
+	logger.debug('channelName  : ' + channelName);
+	logger.debug('chaincodeName : ' + chaincodeName);
+	logger.debug('chaincodeVersion  : ' + chaincodeVersion);
+	logger.debug('chaincodeType  : ' + chaincodeType);
+	logger.debug('fcn  : ' + fcn);
+	logger.debug('args  : ' + args);
+	if (!chaincodeName) {
+		res.json(getErrorMessage('\'chaincodeName\''));
+		return;
+	}
+	if (!chaincodeVersion) {
+		res.json(getErrorMessage('\'chaincodeVersion\''));
+		return;
+	}
+	if (!channelName) {
+		res.json(getErrorMessage('\'channelName\''));
+		return;
+	}
+	if (!chaincodeType) {
+		res.json(getErrorMessage('\'chaincodeType\''));
+		return;
+	}
+	if (!args) {
+		res.json(getErrorMessage('\'args\''));
+		return;
+	}
+
+	let message = await upgrade.upgradeChaincode(peers, channelName, chaincodeName, chaincodeVersion, chaincodeType, fcn, args, req.username, req.orgname);
 	res.send(message);
 });
 // Invoke transaction on chaincode on target peers
