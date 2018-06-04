@@ -2,7 +2,7 @@
 TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjgwNjk4OTksInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4MDMzODk5fQ.lxddhB-WAI4pQIYkvDB71jjvUMVlRiSvgXGtWnnDIw0"
 
 
-function channels() {
+function createChannels() {
     curl -s -X POST \
         http://localhost:4000/channels \
         -H "authorization: $TOKEN" \
@@ -13,7 +13,7 @@ function channels() {
         }'  
 }
 
-function peers() {
+function joinChannel() {
     curl -s -X POST \
         http://localhost:4000/channels/mychannel/peers \
         -H "authorization: $TOKEN" \
@@ -66,8 +66,8 @@ function chaincodesUpgrade() {
 }
 
 
-# channels
-# peers
+# createChannels
+# joinChannel
 chaincodesInstall
 # chaincodesInstantiate
 chaincodesUpgrade
