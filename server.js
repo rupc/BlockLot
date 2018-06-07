@@ -269,6 +269,11 @@ app.post('/subscribe', function(req, res) {
         var tx_id = data.tx_id_string_;
         var payload = data.payload_;
 
+        if (typeof payload !== "strings") {
+            logger.debug("Typeof payload:", typeof payload);
+            payload = "null";
+        }
+        console.log(typeof payload);
         console.log("tx_id", tx_id);
         console.log("payload", payload);
         // raw response 
@@ -702,6 +707,14 @@ function QueryAllEvents(req, res) {
         // for (var c in payload) {
             // s += String.fromCharCode(c);
         // }
+
+        if (typeof payload !== "strings") {
+            logger.debug("Typeof payload:", typeof payload);
+            payload = "null";
+        }
+        console.log(typeof payload);
+        console.log("tx_id", tx_id);
+        console.log("payload", payload);
 
         tx_id = data.tx_id_string_;
         payload = data.payload_;
