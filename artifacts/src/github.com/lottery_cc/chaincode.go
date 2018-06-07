@@ -90,6 +90,19 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     abc = 2 + 2;
     console.log("The value of abc is " + abc); // 4
     `)
+    vm.Run(sjcl)
+    vm.Run(
+    `
+    console.log("왜 이건 그냥 씹히냐1?")
+    var indexHash = sjcl.hash.sha256.hash("randomstring");
+    console.log("indexnhash" + indexHash);
+    console.log("왜 이건 그냥 씹히냐2?")
+    `)
+
+    vm.Run(`
+    abc += 4 ;
+    console.log("The value of abc in another vm?: " + abc); // 8
+    `)
 
     openTxID := stub.GetTxID()
     chanID := stub.GetChannelID()

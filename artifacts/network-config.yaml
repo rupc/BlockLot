@@ -72,37 +72,37 @@ channels:
         endorsingPeer: false
         chaincodeQuery: true
         ledgerQuery: true
-        eventSource: false
+        eventSource: true
 
-      peer2.org1.example.com:
-        endorsingPeer: false
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: false
+      # peer2.org1.example.com:
+        # endorsingPeer: false
+        # chaincodeQuery: true
+        # ledgerQuery: true
+        # eventSource: true
 
-      peer3.org1.example.com:
-        endorsingPeer: false
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: false
+      # peer3.org1.example.com:
+        # endorsingPeer: false
+        # chaincodeQuery: true
+        # ledgerQuery: true
+        # eventSource: true
 
-      peer4.org1.example.com:
-        endorsingPeer: false
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: false
+      # peer4.org1.example.com:
+        # endorsingPeer: false
+        # chaincodeQuery: true
+        # ledgerQuery: true
+        # eventSource: true
 
-      peer5.org1.example.com:
-        endorsingPeer: false
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: false
+      # peer5.org1.example.com:
+        # endorsingPeer: false
+        # chaincodeQuery: true
+        # ledgerQuery: true
+        # eventSource: true
 
-      peer6.org1.example.com:
-        endorsingPeer: false
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: false
+      # peer6.org1.example.com:
+        # endorsingPeer: false
+        # chaincodeQuery: true
+        # ledgerQuery: true
+        # eventSource: true
 
       peer0.org2.example.com:
         endorsingPeer: true
@@ -114,7 +114,7 @@ channels:
         endorsingPeer: false
         chaincodeQuery: true
         ledgerQuery: true
-        eventSource: false
+        eventSource: true
 
     # [Optional]. what chaincodes are expected to exist on this channel? The application can use
     # this information to validate that the target peers are in the expected state by comparing
@@ -133,11 +133,11 @@ organizations:
     peers:
       - peer0.org1.example.com
       - peer1.org1.example.com
-      - peer2.org1.example.com
-      - peer3.org1.example.com
-      - peer4.org1.example.com
-      - peer5.org1.example.com
-      - peer6.org1.example.com
+      # - peer2.org1.example.com
+      # - peer3.org1.example.com
+      # - peer4.org1.example.com
+      # - peer5.org1.example.com
+      # - peer6.org1.example.com
 
     # [Optional]. Certificate Authorities issue certificates for identification purposes in a Fabric based
     # network. Typically certificates provisioning is done in a separate process outside of the
@@ -219,45 +219,45 @@ peers:
     tlsCACerts:
       path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
 
-  peer2.org1.example.com:
-    url: grpcs://localhost:17051
-    eventUrl: grpcs://localhost:17053
-    grpcOptions:
-      ssl-target-name-override: peer2.org1.example.com
-    tlsCACerts:
-      path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/tls/ca.crt
+  # peer2.org1.example.com:
+    # url: grpcs://localhost:17051
+    # eventUrl: grpcs://localhost:17053
+    # grpcOptions:
+      # ssl-target-name-override: peer2.org1.example.com
+    # tlsCACerts:
+      # path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/tls/ca.crt
 
-  peer3.org1.example.com:
-    url: grpcs://localhost:17056
-    eventUrl: grpcs://localhost:17058
-    grpcOptions:
-      ssl-target-name-override: peer3.org1.example.com
-    tlsCACerts:
-      path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer3.org1.example.com/tls/ca.crt
+  # peer3.org1.example.com:
+    # url: grpcs://localhost:17056
+    # eventUrl: grpcs://localhost:17058
+    # grpcOptions:
+      # ssl-target-name-override: peer3.org1.example.com
+    # tlsCACerts:
+      # path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer3.org1.example.com/tls/ca.crt
 
-  peer4.org1.example.com:
-    url: grpcs://localhost:27056
-    eventUrl: grpcs://localhost:27058
-    grpcOptions:
-      ssl-target-name-override: peer4.org1.example.com
-    tlsCACerts:
-      path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer4.org1.example.com/tls/ca.crt
+  # peer4.org1.example.com:
+    # url: grpcs://localhost:27056
+    # eventUrl: grpcs://localhost:27058
+    # grpcOptions:
+      # ssl-target-name-override: peer4.org1.example.com
+    # tlsCACerts:
+      # path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer4.org1.example.com/tls/ca.crt
 
-  peer5.org1.example.com:
-    url: grpcs://localhost:37056
-    eventUrl: grpcs://localhost:37058
-    grpcOptions:
-      ssl-target-name-override: peer5.org1.example.com
-    tlsCACerts:
-      path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer5.org1.example.com/tls/ca.crt
+  # peer5.org1.example.com:
+    # url: grpcs://localhost:37056
+    # eventUrl: grpcs://localhost:37058
+    # grpcOptions:
+      # ssl-target-name-override: peer5.org1.example.com
+    # tlsCACerts:
+      # path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer5.org1.example.com/tls/ca.crt
 
-  peer6.org1.example.com:
-    url: grpcs://localhost:47056
-    eventUrl: grpcs://localhost:47058
-    grpcOptions:
-      ssl-target-name-override: peer6.org1.example.com
-    tlsCACerts:
-      path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer6.org1.example.com/tls/ca.crt
+  # peer6.org1.example.com:
+    # url: grpcs://localhost:47056
+    # eventUrl: grpcs://localhost:47058
+    # grpcOptions:
+      # ssl-target-name-override: peer6.org1.example.com
+    # tlsCACerts:
+      # path: artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer6.org1.example.com/tls/ca.crt
 
   peer0.org2.example.com:
     url: grpcs://localhost:8051

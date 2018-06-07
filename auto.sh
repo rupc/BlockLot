@@ -1,5 +1,5 @@
 # TOKEN에 최신 토큰 받아와서 아래에 넣어주기.
-TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjgwNjk4OTksInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4MDMzODk5fQ.lxddhB-WAI4pQIYkvDB71jjvUMVlRiSvgXGtWnnDIw0"
+TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1Mjg0MjEyNzIsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4Mzg1MjcyfQ.bvwOukX4nHLkGVFErw_FrwcHYC6CyPxpXsUQf0jE7Bg"
 
 
 function createChannels() {
@@ -33,7 +33,7 @@ function chaincodesInstall() {
             "chaincodeName":"lottery",
             "chaincodePath":"github.com/lottery_cc",
             "chaincodeType": "golang",
-            "chaincodeVersion":"v9"
+            "chaincodeVersion":"v0"
         }'
 }
 
@@ -59,16 +59,16 @@ function chaincodesUpgrade() {
         -d '{
             "peers": ["peer0.org1.example.com","peer1.org1.example.com"],
             "chaincodeName":"lottery",
-            "chaincodeVersion":"v9",
+            "chaincodeVersion":"v0",
             "chaincodeType": "golang",
             "args":[""]
         }'
 }
 
 
-# createChannels
-# joinChannel
+createChannels
+joinChannel
 chaincodesInstall
-# chaincodesInstantiate
-chaincodesUpgrade
+chaincodesInstantiate
+# chaincodesUpgrade
 

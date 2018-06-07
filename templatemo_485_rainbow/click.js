@@ -1,7 +1,11 @@
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
-
+// Lottery structure. got this when clicking the row
 var gLottery;
+
+// 체인정보 구현
 function clickChaininfo() {
+    var eventHash = gLottery.eventHash;
+    var randomKey = gLottery.randomKey;
     var drawTxID = gLottery.drawTxID; // 추첨 트랜잭션 ID
     var drawBlockHeight; // 추첨 트랜잭션이 포함된 블록 번호
     var drawBlockInfo; // 추첨 트랜잭션이 포함된 블록 정보
@@ -12,6 +16,7 @@ function clickChaininfo() {
 
     var subscribeTxIDs = gLottery.subscribeTxIDs;
     
+    var installedChaincodes;
     var chaincodeID; // 체인코드 이름
     var chaincodeVersion; // 체인코드 버전
     var peers; // 피어 주소 목록
@@ -30,10 +35,14 @@ function clickChaininfo() {
     text = 
         // "peer list: " + peers + "<br>" + 
         // "txid list: " + txidList + "<br>" + 
-        "<b>channelName</b>: " + channelName + "<br>" + 
-        "<b>openTxID</b>: " + openTxID + "<br>" + 
-        "<b>drawTxID</b>: " + drawTxID + "<br>" + 
-        "<b>SubscribeTxIDs</b>: " + subscribeTxIDs + "<br>" + 
+        "<ul>" + 
+        "<li style='text-align: left;'><b>식별자</b>: " + eventHash + "</li>" + 
+        "<li style='text-align: left;'><b>랜덤키</b>: " + randomKey + "</li>" + 
+        "<li style='text-align: left;'><b>채널 이름</b>: " + channelName + "</li>" + 
+        "<li id='opentxid' onclick='queryOpenTxID()' style='text-align: left;'><b>오픈 TXID</b>: <div style='color:DarkBlue; cursor:pointer;'>" + openTxID + "</div></li>" + 
+        "<li onclick='queryDrawTxID()' style='text-align: left;'><b>추첨 TXID</b>: <div style='color:DarkBlue; cursor:pointer;'>" + drawTxID + "</div></li>" + 
+        "<li style='text-align: left;'><b>응모 TXID 목록</b>: " + subscribeTxIDs + "</li>" + 
+        "<li style='text-align: left;'><b>Anchor</b>: " + subscribeTxIDs + "</li>" + 
         // "<b>openClientIdentity</b>: " + openClientIdentity + "<br>" + 
         // "drawBlock: " + drawBlockHeight + "<br>" + 
         // "openTxBlock: " + openBlockHeight + "<br>" + 
@@ -41,6 +50,7 @@ function clickChaininfo() {
         // "chaincodeVersion: " + chaincodeVersion + "<br>" + 
         // "endorsementPolicy: " + endorsementPolicy + "<br>" + 
         // "ordererInfo: " + ordererInfo + "<br>" + 
+        "</ul>" +
         
         ""
         ;
@@ -48,9 +58,18 @@ function clickChaininfo() {
     swal({
         title: '체인 정보',
         html: text,
-        showCloseButton: true
+        width: 800,
+        showCloseButton: true,
     });
 
+}
+
+function queryOpenTxID() {
+    alert("queryOpenTxID");
+}
+
+function queryDrawTxID() {
+    alert("queryDrawTxID");
 }
 
 // Globally passed pariticpant lists
@@ -59,10 +78,11 @@ var gPariticipantList;
 function clickParticipantinfo() {
     var participantArray = gPariticipantList.split(",");
     console.log(gPariticipantList, participantArray.length);
-    var text = "";
+    var text = "<ol style='height:130px;display:flex; flex-direction:column; flex-wrap:wrap;'>";
     for (var i = 0; i < participantArray.length; ++i) {
-        text += "" + (i+1) + " " + participantArray[i] + "<br>";
+        text += "<li style='text-align: left;'><b>" + participantArray[i] + "</b></li>";
     }
+    text += "</ol>"
     swal({
         title: '참여자 목록',
         html: text,
@@ -189,7 +209,6 @@ var doDetermineWinner = function(randomBits, numOfParticipants, numOfWinners) {
 
     });
     console.log(tuples);
-
 
     return tuples;
 }
@@ -378,7 +397,10 @@ $(document).ready(function() {
                     var ts = cell.getRow().getData().tsAnnouncementDate;
                     var curr_ts = Math.floor(Date.now() / 1000);
                     if (curr_ts >= ts) {
-                        Swal({type:"error", title:"참여 기한이 마감되었습니다"});
+                        Swal({type:"error", title:"참여 기한이 마감되었습니다", 
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     }
                     Swal({
@@ -447,26 +469,35 @@ $(document).ready(function() {
                 cellClick:function(e, cell) {
 
                     // Validate appropriate date
-                    var ts = cell.getRow().getData().tsAnnouncementDate;
+                    /* var ts = cell.getRow().getData().tsAnnouncementDate;
                     var curr_ts = getCurrentTimestamp();
                     if (curr_ts <= ts) {
-                        Swal({type:"error", title:"발표일이 지나야 합니다"});
+                        Swal({type:"error", title:"발표일이 지나야 합니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     }
 
-                    // Validate participants
+                    Validate participants
                     var kRegistered = cell.getRow().getData().numOfRegistered;
                     if(kRegistered == 0) {
-                        swal({type:"error", title:"참가자가 아무도 없습니다"});
+                        swal({type:"error", title:"참가자가 아무도 없습니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     } 
 
-                    // Validate lottery status
+                    Validate lottery status
                     var status = cell.getRow().getData().status;
                     if(status == "CHECKED") {
-                        swal({type:"error", title:"이미 추첨되었습니다"});
+                        swal({type:"error", title:"이미 추첨되었습니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
-                    } 
+                    }   */
 
 
                     // Validate host authentication token
@@ -476,8 +507,19 @@ $(document).ready(function() {
                         input: 'text',
                         showCancelButton: true,
                         confirmButtonText: '확인',
-                        cancelButtonText: '취소'
+                        cancelButtonText: '취소',
+                    }, function (inputValue) {
+                        if (inputValue === false) {
+                            console.log("Do here everything you want");
+                        } else {
+                            console.log("no");
+                        }
                     }).then((result) => {
+                        // When clicked "cancel"
+                        if (result.dismiss == "cancel") {
+                            console.log(result, result.dismiss);
+                            return;
+                        }
                         var hostAuthToken = result.value;
                         var allData = {
                             "hostAuthToken" : hostAuthToken,
@@ -532,11 +574,26 @@ $(document).ready(function() {
                                 type: "POST", 
                                 data: allData,
                                 success: function(responseData) {
-                                    Swal(
-                                        '추첨 완료',
-                                        responseData
-                                    )
-                                    // Update table
+                                    var outputText = 
+                                        "<b>" +
+                                        responseData +
+                                        "</b>"
+                                        ;
+
+                                    swal({
+                                        title: "("+ lotteryName + ")</br>추첨 완료</br>",
+                                        // text: outputText,
+                                        html: outputText,
+                                        width: 400,
+                                        // height: 300,
+                                        padding: 10,
+                                        backdrop: `
+                                    rgba(0,0,123,0.4)
+                                    url("/images/draw.gif")
+                                    left top
+                                    no-repeat
+                                  `
+                                    });
 
                                     var rowIndex = cell.getRow().getIndex();
                                     $("#allQueryTableReserved").tabulator("updateData", [{id:rowIndex, status:"CHECKED", winnerList:responseData}]); //update data
@@ -560,7 +617,7 @@ $(document).ready(function() {
                         });
                         hideSpinner();
 
-                    }
+                    };
 
                 }
             },
@@ -574,20 +631,29 @@ $(document).ready(function() {
                     var ts = cell.getRow().getData().tsAnnouncementDate;
                     var curr_ts = getCurrentTimestamp();
                     if (curr_ts <= ts) {
-                        Swal({type:"error", title:"발표일이 지나야 합니다"});
+                        Swal({type:"error", title:"발표일이 지나야 합니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     }
 
                     // Validate participants
                     var kRegistered = cell.getRow().getData().numOfRegistered;
                     if(kRegistered == 0) {
-                        swal({type:"error", title:"참가자가 아무도 없습니다"});
+                        swal({type:"error", title:"참가자가 아무도 없습니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     } 
 
                     var status = cell.getRow().getData().status;
                     if(status != "CHECKED") {
-                        swal({type:"error", title:"아직 추첨 되지 않았습니다"});
+                        swal({type:"error", title:"아직 추첨 되지 않았습니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     } 
 
@@ -601,11 +667,12 @@ $(document).ready(function() {
                     var outputText = "";
 
                     for (var i = 0; i < numOfWinners; ++i) {
-                        outputText += "<font color=\"red\">" + (i+1) + "</font> :" + winnerListArray[i] + "\n\n";
+                        outputText += "<font color=\"red\">" + (i+1) + "</font> " + winnerListArray[i] + "<br>";
                     }
 
                     swal({
-                        title: "("+ lotteryName + ")</br>결과 확인</br>"+  outputText,
+                        title: "("+ lotteryName + ")</br>결과 확인</br>",
+                        html: outputText,
                         // text: outputText,
                         width: 400,
                         // height: 300,
@@ -702,14 +769,20 @@ $(document).ready(function() {
                     var ts = cell.getRow().getData().tsAnnouncementDate;
                     var curr_ts = getCurrentTimestamp();
                     if (curr_ts <= ts) {
-                        Swal({type:"error", title:"발표일이 지나야 합니다"});
+                        Swal({type:"error", title:"발표일이 지나야 합니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     }
 
                     // Validate participants
                     var kRegistered = cell.getRow().getData().numOfRegistered;
                     if(kRegistered == 0) {
-                        swal({type:"error", title:"참가자가 아무도 없습니다"});
+                        swal({type:"error", title:"참가자가 아무도 없습니다",
+                            confirmButtonText: '확인',
+                            cancelButtonText: '취소',
+                        });
                         return;
                     } 
 
@@ -783,20 +856,19 @@ $(document).ready(function() {
                             // var outputText = "(긴 경우)처음 " + firstNchars + " 글자까지만 표현\n"
                             var outputText = "";
                             for (i = 0; i < numOfWinners; ++i) {
-                                // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + tuples[i][0].substring(0, 10) + "\n\n";
-                                // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + tuples[i][0] + "\n\n";
-                                outputText += "<font color=\"red\">" + (i+1) + "</font> :" + participantArray[tuples[i][0]] + "\n\n";
+                                outputText += "<font color='red'>" + (i+1) + "</font> " + participantArray[tuples[i][0]] + "<br>";
                             }
 
                             swal({
-                                title: outputText,
+                                title: "검증 결과",
+                                html: outputText,
                                 // text: outputText ,
                                 width: 400,
                                 // height: 300,
                                 padding: 10,
                                 backdrop: `
                                         rgba(0,0,123,0.4)
-                                        url("/images/Congratst.gif")
+                                        url("/images/verify.gif")
                                         left top
                                         no-repeat
                                       `
@@ -1004,20 +1076,28 @@ $(document).ready(function() {
                         subscribeTxIDs: cell.getRow().getData().subscribeTxIDs,
                         channelName: cell.getRow().getData().channelID,
                         openClientIdentity: cell.getRow().getData().openClientIdentity,
+                        eventHash: cell.getRow().getData().eventHash,
+                        randomKey: cell.getRow().getData().randomKey,
                     };
 
-                    swal('추첨 행사 정보', 
-                        "<b>행사 이름</b>: " + cell.getRow().getData().name + "</br>" +
+                    swal({title:'추첨 행사 정보', 
+                        html:"<b>행사 이름</b> : " + cell.getRow().getData().name + "</br>" +
                         "<b>등록일</b> : " + cell.getRow().getData().issueDate  + "</br>" +
                         "<b>마감일</b> : " + cell.getRow().getData().dueDate  + "</br>" + 
-                        "<b>타겟 블록</b> : <a target='_blank'  href='https://blockchain.info/ko/block-height/" + cell.getRow().getData().targetBlock + "'>" + cell.getRow().getData().targetBlock + "</a></br>" +
+                        "<b>발표일</b> : " + cell.getRow().getData().announceDate  + "</br>" + 
                         '<b>참여자</b> : <span style="cursor:pointer;"onclick="clickParticipantinfo()"><i class="fa fa-address-book"; style="font-size:26px;color:Blue"></i></span></br>' +
-                        "<b>우승자</b>: " + cell.getRow().getData().winnerList + "</br>" +
-                        "<b>추첨노트(경품)</b> : " + cell.getRow().getData().lotteryNote + "</br>" +
-                        "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
-                        "<b>랜덤키</b> : " + cell.getRow().getData().randomKey + "</br>"  + 
-                        "<b>체인정보</b> : <span style='cursor:pointer;'onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:Blue'></i></span>" + 
+                        "<b>우승자</b> : " + cell.getRow().getData().winnerList + "</br>" +
+                        "<b>추첨 노트</b> : " + cell.getRow().getData().lotteryNote + "</br>" +
+                        "<b>타겟 블록</b> : <a target='_blank'  href='https://blockchain.info/ko/block-height/" + cell.getRow().getData().targetBlock + "'>" + cell.getRow().getData().targetBlock + "</a></br>" +
+                        // "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
+                        // "<b>랜덤키</b> : " + cell.getRow().getData().randomKey + "</br>"  + 
+                        "<b>체인 정보</b> : <span style='cursor:pointer;'onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:Blue'></i></span>" + 
                         ""
+                        ,
+                        confirmButtonText: '확인',
+                        cancelButtonText: '취소',
+                    },
+                        
                     );
                 }
             },
@@ -1081,10 +1161,11 @@ $(document).ready(function() {
             '<input id="numOfWinners" placeholder="당첨자 수" min="1" style="float:left; width:100%;" type="number" class="swal2-input">' + 
             '<input id="expectedAnnouncementDate" placeholder="발표일"style="width:100%;" type="datetime-local" value="' + defaultDatetime  + '"class="swal2-input">' +
             '<input id="targetBlockOffset" placeholder="최신 블록 오프셋"style="float:left;width:250;" type="number" min="2"  class="swal2-input">' +
-            '<input id="lotteryNote" placeholder="추첨 상세 정보"  class="swal2-input"style="float:left;width:250;height:400;" type="input">',
+            '<input id="lotteryNote" placeholder="추첨 노트(경품)"  class="swal2-input"style="float:left;width:250;height:400;" type="input">',
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: '등록',
+            cancelButtonText: '취소',
             showLoaderOnConfirm: true,
             preConfirm: () => {
                 return {
