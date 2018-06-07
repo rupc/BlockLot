@@ -64,12 +64,16 @@ function clickChaininfo() {
 
 }
 
-function queryOpenTxID() {
-    alert("queryOpenTxID");
+function queryOpenTxID(obj) {
+    console.log("queryOpenTxID", gLottery.openTxID);
 }
 
 function queryDrawTxID() {
-    alert("queryDrawTxID");
+    console.log("queryDrawTxID", gLottery.drawTxID);
+}
+
+function queryChannel() {
+
 }
 
 // Globally passed pariticpant lists
