@@ -1,3 +1,5 @@
+var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
+var hostURL = "http://192.168.0.12:1185";
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 // Lottery structure. got this when clicking the row
 var gLottery;
@@ -38,7 +40,7 @@ function clickChaininfo() {
         // "peer list: " + peers + "<br>" + 
         // "txid list: " + txidList + "<br>" + 
         "<ul>" + 
-        "<li style='text-align: left;'><b>식별자</b>: " + eventHash + "</li>" + 
+        "<li style='text-align: left;'><b>식별자</b>: <span data-toggle='tooltip' title='행사의 고유 ID를 나타내며, 체인코드 내부에서 검색키로 사용됩니다'>" + eventHash + "</span></li>" + 
         "<li style='text-align: left;'><b>채널 이름</b>: " + channelName + "</li>" + 
 
         "<li id='opentxid' onclick='queryOpenTxID()' style='text-align: left;'><b>등록</b>: <span data-toggle='tooltip' title='행사 등록 트랜잭션 ID를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + openTxID + "</span></li>" + 
@@ -48,8 +50,8 @@ function clickChaininfo() {
         "<li style='text-align: left;'><b>응모</b>: " + subscribeTxIDs + "</li>" + 
 
         "<li style='text-align: left;'><b>Anchor peer</b>: <span data-toggle='tooltip' title='SDK 서버가 연결된 피어 주소를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + anchorPeer + "</span></li>" + 
-        "<li style='text-align: left;'><b>랜덤키</b>: " + randomKey + "</li>" + 
-        "<li style='text-align: left;'><b>검증키</b>: " + verifiableRandomKey + "</li>" + 
+        "<li style='text-align: left;'><b>랜덤키</b>: <span data-toggle='tooltip' title='행사 등록시 사용된 랜덤 키를 나타냅니다'>" + randomKey + "</span></li>" + 
+        "<li style='text-align: left;'><b>검증키</b>: <span data-toggle='tooltip' title='행사 정보의 불변성을 검증하기 위해 사용됩니다'>" + verifiableRandomKey + "</span></li>" + 
         // "<b>openClientIdentity</b>: " + openClientIdentity + "<br>" + 
         // "drawBlock: " + drawBlockHeight + "<br>" + 
         // "openTxBlock: " + openBlockHeight + "<br>" + 
@@ -73,6 +75,34 @@ function clickChaininfo() {
 
 function queryOpenTxID(obj) {
     console.log("queryOpenTxID", gLottery.openTxID);
+    showSpinner();
+
+    var allData = {
+        "txid" : gLottery.openTxID,
+    };
+
+    $.ajax({
+        url: hostURL + "/query-by-tx",
+        type: "POST", 
+        data: allData,
+        success: function(responseData) {
+            console.log(responseData);
+            var prettyJSON = responseData
+            // console.log(prettyJSON);
+            swal({
+                title: "트랜잭션 조회",
+                html: prettyJSON,
+                width:800,
+            });
+            hideSpinner();
+        },
+        error: function() {
+            Swal("Fail");
+            hideSpinner();
+        }
+    });
+
+
 }
 
 function queryDrawTxID() {
@@ -252,9 +282,8 @@ $(document).ready(function() {
 
     }
 
-    var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
     // var hostURL = "http://141.223.121.56:1185";
-    var hostURL = "http://192.168.0.12:1185";
+    // var hostURL = "http://192.168.0.12:1185";
 
     $.ajax({
         url: hostURL + "/query-all-events",
@@ -808,6 +837,89 @@ $(document).ready(function() {
 
                     var numOfWinners = cell.getRow().getData().numOfWinners;
                     var verification = false;
+
+
+                    swal({
+                        type: 'question',
+                        title: '검증 목록',
+                        html:
+                        '<div><input type="checkbox" id="randomSourceVrfy" value="randomSource"> \
+                        <label for="randomSourceVrfy">랜덤 소스 검증</label></div>' +
+
+                        '<div><input type="checkbox" id="infoVrfy" value="info"> \
+                        <label for="infoVrfy">행사 정보 무결성 검증</label></div>' +
+
+                        '<div><input type="checkbox" id="winnerVrfy" value="winner"> \
+                        <label for="winnerVrfy">당첨자 목록 검증</label></div>' +
+
+                        '<div><input type="checkbox" id="responseVrfy" value="response"> \
+                        <label for="responseVrfy">응답 값 비교 검증</label></div>' +
+
+                        '<div><input type="checkbox" id="statVrfy" value="stat"> \
+                        <label for="statVrfy">통계적 검증</label></div>'
+                        ,
+
+                        focusConfirm: false,
+                        preConfirm: () => {
+                            return {
+                                randomSourceVrfy : document.getElementById('randomSourceVrfy').checked,
+                                infoVrfy : document.getElementById('infoVrfy').checked,
+                                winnerVrfy : document.getElementById('winnerVrfy').checked,
+                                responseVrfy : document.getElementById('responseVrfy').checked,
+                                statVrfy : document.getElementById('statVrfy').checked,
+                            };
+                        },
+                        confirmButtonText: '확인',
+                        cancelButtonText: '취소',
+                        backdrop: `
+                                rgba(0,0,123,0.4)
+                                url("/images/verify.gif")
+                                left top
+                                no-repeat
+                              `,
+                        allowOutsideClick: () => !swal.isLoading()
+                    }).then((result) => {
+
+                        if (result.value) {
+                            var randomSourceVrfy = result.value.randomSourceVrfy
+                            var infoVrfy = result.value.infoVrfy;
+                            var winnerVrfy = result.value.winnerVrfy;
+                            var responseVrfy = result.value.responseVrfy;
+                            var statVrfy = result.value.statVrfy;
+
+                            console.log(randomSourceVrfy, infoVrfy, 
+                                winnerVrfy, responseVrfy, statVrfy);
+
+                            // TODO
+                            if (randomSourceVrfy) {
+                                vrfyRandomsource();
+                            }
+
+                            // TODO
+                            if (infoVrfy) {
+                                vrfyInfo();
+                            }
+
+                            // TODO
+                            if (winnerVrfy) {
+                                vrfyWinner();
+                            }
+
+                            // TODO
+                            if (responseVrfy) {
+                                vrfyResponse();
+                            }
+
+                            // TODO
+                            if (statVrfy) {
+                                vrfyStat();
+                            }
+
+                        }
+                    });
+
+                    return;
+
                     // Define query block func
 
                     var queryBlock = function(height) {
@@ -1289,3 +1401,22 @@ $(document).ready(function() {
     });
 
 } );
+
+function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}

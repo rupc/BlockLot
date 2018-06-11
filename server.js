@@ -55,6 +55,7 @@ var TokenForServer;
 var chaincode="lottery";
 var channelName="mychannel";
 var peers = ["peer0.org1.example.com","peer1.org1.example.com"];
+var anchorPeer = "peer0.org1.example.com";
 
 function getChaincodeURL(channelName, chaincode) {
     return "/channels/" + channelName + "/chaincodes/" + chaincode;
@@ -177,6 +178,23 @@ function GetRandomNonceStr(len) {
 }
 
 app.post('/query-by-tx', function(req, res) {
+    var txid = req.body.txid;
+    var url = "/channels/" + channelName + "/transactions/" + txid + "?peer=" + anchorPeer;
+
+    var args = {
+        headers: { 
+            "Authorization" : TokenForServer,
+            "Content-Type": "application/json" }
+    };
+
+    client.get(SDKWebServerAddress + url, args, function (data, response) {
+        logger.debug(data.validationCode);
+        // logger.debug(response);
+        console.dir(data, {depth: null, colors: true})
+
+        res.write(JSON.stringify(data, null, '\t'));
+        res.end("yo");
+    });
 
 });
 
