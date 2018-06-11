@@ -1,5 +1,5 @@
 # TOKEN에 최신 토큰 받아와서 아래에 넣어주기.
-TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1Mjg0MjEyNzIsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4Mzg1MjcyfQ.bvwOukX4nHLkGVFErw_FrwcHYC6CyPxpXsUQf0jE7Bg"
+TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1Mjg1NTU4ODcsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4NTE5ODg3fQ.FzatLUdt5blnWoDv4NEZaTubcFtyYFzdcqX-2l42XCA"
 
 
 function createChannels() {

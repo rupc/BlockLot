@@ -5,7 +5,6 @@ var gLottery;
 // 체인정보 구현
 function clickChaininfo() {
     var eventHash = gLottery.eventHash;
-    var randomKey = gLottery.randomKey;
     var drawTxID = gLottery.drawTxID; // 추첨 트랜잭션 ID
     var drawBlockHeight; // 추첨 트랜잭션이 포함된 블록 번호
     var drawBlockInfo; // 추첨 트랜잭션이 포함된 블록 정보
@@ -20,9 +19,12 @@ function clickChaininfo() {
     var chaincodeID; // 체인코드 이름
     var chaincodeVersion; // 체인코드 버전
     var peers; // 피어 주소 목록
+    var anchorPeer = gLottery.anchoPeer;
 
     var channelName = gLottery.channelName; // 채널 정보
     var txidList; // 관련 트랜잭션 리스트
+    var randomKey = gLottery.randomKey;
+    var verifiableRandomKey= gLottery.verifiableRandomKey;
 
     var text = "";
 
@@ -37,12 +39,17 @@ function clickChaininfo() {
         // "txid list: " + txidList + "<br>" + 
         "<ul>" + 
         "<li style='text-align: left;'><b>식별자</b>: " + eventHash + "</li>" + 
-        "<li style='text-align: left;'><b>랜덤키</b>: " + randomKey + "</li>" + 
         "<li style='text-align: left;'><b>채널 이름</b>: " + channelName + "</li>" + 
-        "<li id='opentxid' onclick='queryOpenTxID()' style='text-align: left;'><b>오픈 TXID</b>: <div style='color:DarkBlue; cursor:pointer;'>" + openTxID + "</div></li>" + 
-        "<li onclick='queryDrawTxID()' style='text-align: left;'><b>추첨 TXID</b>: <div style='color:DarkBlue; cursor:pointer;'>" + drawTxID + "</div></li>" + 
-        "<li style='text-align: left;'><b>응모 TXID 목록</b>: " + subscribeTxIDs + "</li>" + 
-        "<li style='text-align: left;'><b>Anchor</b>: " + subscribeTxIDs + "</li>" + 
+
+        "<li id='opentxid' onclick='queryOpenTxID()' style='text-align: left;'><b>등록</b>: <span data-toggle='tooltip' title='행사 등록 트랜잭션 ID를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + openTxID + "</span></li>" + 
+
+        "<li onclick='queryDrawTxID()' data-toggle='tooltip' title='추첨 트랜잭션 ID를 나타냅니다' style='text-align: left;'><b>추첨</b>: <span style='color:DarkBlue; cursor:pointer;'>" + drawTxID + "</span></li>" + 
+
+        "<li style='text-align: left;'><b>응모</b>: " + subscribeTxIDs + "</li>" + 
+
+        "<li style='text-align: left;'><b>Anchor peer</b>: <span data-toggle='tooltip' title='SDK 서버가 연결된 피어 주소를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + anchorPeer + "</span></li>" + 
+        "<li style='text-align: left;'><b>랜덤키</b>: " + randomKey + "</li>" + 
+        "<li style='text-align: left;'><b>검증키</b>: " + verifiableRandomKey + "</li>" + 
         // "<b>openClientIdentity</b>: " + openClientIdentity + "<br>" + 
         // "drawBlock: " + drawBlockHeight + "<br>" + 
         // "openTxBlock: " + openBlockHeight + "<br>" + 
@@ -169,6 +176,9 @@ function formatDatetime(datetime) {
         month = "" + 0 + month;
     }
     var day = datetime.getDate();
+    if (day < 10) {
+        day = "" + 0 + day;
+    }
     var hour = datetime.getHours();
     var min = datetime.getMinutes();
     if (min <= 9) min = "" + 0 + min;
@@ -251,7 +261,12 @@ $(document).ready(function() {
         type: "POST", 
         data: "",
         success: function(responseData) {
-            var res = responseData.split("@");
+            var sdkInfo = JSON.parse(responseData).sdkPayload;
+            var res = JSON.parse(responseData).ccPayload.split("@");
+            // console.log(responseData);
+            // console.log(sdkInfo);
+            // console.log(res);
+            // var res = responseData.ccPayload.split("@");
             var numOfPeer = 2
             res.splice(0, 1);
             for (var i = 0, l = res.length; i < l; i++) {
@@ -293,7 +308,7 @@ $(document).ready(function() {
                     targetBlock : obj.FutureBlockHeight,
                     issueDate : obj.IssueDate,
                     dueDate : obj.Duedate,
-                    randomKey : obj.Randomkey,
+                    randomKey : obj.RandomKey,
                     winnerList : obj.WinnerList,
                     participantList : obj.MemberList,
                     script : obj.Script,
@@ -303,6 +318,7 @@ $(document).ready(function() {
                     drawTxID : obj.DrawTxID,
                     subscribeTxIDs : obj.SubscribeTxIDs,
                     openClientIdentity : obj.OpenClientIdentity,
+                    anchorPeer : obj.AnchorPeer,
                 }
 
                 var printQueryInfo = function(obj) {
@@ -1082,6 +1098,8 @@ $(document).ready(function() {
                         openClientIdentity: cell.getRow().getData().openClientIdentity,
                         eventHash: cell.getRow().getData().eventHash,
                         randomKey: cell.getRow().getData().randomKey,
+                        verifiableRandomKey: cell.getRow().getData().verifiableRandomKey,
+                        anchorPeer: cell.getRow().getData().anchorPeer,
                     };
 
                     swal({title:'추첨 행사 정보', 
@@ -1196,11 +1214,12 @@ $(document).ready(function() {
                         dataType: 'json',
                         crossDomain:true,
                     }).done(function(json) {
-                        var latestblock = json.height;
+                        const NumOfMaxMembers = 9999;
+                        var latestBlock = json.height;
 
-                        var targetBlockNumber = (Number(result.value.targetBlockOffset) + Number(latestblock)).toString();
+                        var targetBlockNumber = (Number(result.value.targetBlockOffset) + Number(latestBlock)).toString();
                         var numOfWinners = result.value.numOfWinners;
-                        var numOfMembers = 9999;
+                        var numOfMembers = NumOfMaxMembers;
                         var eventName = result.value.eventName;
 
                         var expectedAnnouncementDate = datetimeToTimestamp(result.value.expectedAnnouncementDate);
@@ -1208,23 +1227,30 @@ $(document).ready(function() {
                         var dueDate = expectedAnnouncementDate;
                         var lotteryNote = result.value.lotteryNote;
 
-                        var concatenated = "" + eventName + numOfWinners + targetBlockNumber + expectedAnnouncementDate + issueDate + dueDate + lotteryNote;
+                        // TODO Sonner or later, choosing the script would be supported
+                        var scriptNum = 1; // Default script
 
-                        var eventHash = sjcl.hash.sha256.hash(concatenated).toString();
+                        // var concatenated = "" + eventName + numOfWinners + targetBlockNumber + expectedAnnouncementDate + issueDate + dueDate + lotteryNote;
 
-                        console.log("Latest block: " + latestblock);
-                        console.log("eventHash: " + eventHash);
+                        // var eventHash = sjcl.hash.sha256.hash(concatenated).toString();
+                        // Event hash need to be calculated in server side
+                        var eventHash = "";
+
+                        console.log("Latest block: " + latestBlock);
+                        // console.log("eventHash: " + eventHash);
 
                         var allData = {
                             "eventHash" : eventHash,
                             "issueDate" : issueDate,
                             "dueDate" : dueDate,
                             "expectedAnnouncementDate" : expectedAnnouncementDate,
+                            "latestBlock" : latestBlock,
                             "targetBlockNumber" : targetBlockNumber,
                             "numOfMembers" : numOfMembers,
                             "numOfWinners" : numOfWinners,
                             "eventName" : eventName,
                             "lotteryNote" : lotteryNote,
+                            "scriptNum" : scriptNum,
                         };
 
                         $.ajax({
@@ -1232,20 +1258,22 @@ $(document).ready(function() {
                             type: "POST", 
                             data: allData,
                             success: function(responseData) {
-                                Swal(
-                                    '등록 완료',
-                                    'success'
-                                )
+                                var outputText = "txid " + responseData;
+                                Swal({ 
+                                    title: "등록 완료",
+                                    confirmButtonText: '확인',
+                                    html: outputText,
+                                });
                                 // Unpack responseData
                                 // Table update
                                 hideSpinner();
                             },
                             error: function() {
-                                Swal(
-                                    '등록 실패!',
-                                    '',
-                                    'error'
-                                )
+                                Swal({ 
+                                    title: "등록 실패!",
+                                    type: 'error',
+                                    confirmButtonText: '확인',
+                                });
                                 hideSpinner();
                             }
                         })

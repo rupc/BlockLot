@@ -10,6 +10,7 @@ var jsonfile = require('jsonfile');
 var cmd=require('node-cmd');
 var sleep = require('sleep');
 var crypto = require('crypto');
+var sjcl = require('sjcl');
 const commandLineArgs = require('command-line-args');
 
 const optionDefinitions = [
@@ -316,14 +317,22 @@ app.post('/open', function(req, res) {
     var expectedAnnouncementDate = req.body.expectedAnnouncementDate;
     var numOfWinners = req.body.numOfWinners;
     var numOfMembers = req.body.numOfMembers;
+    var latestBlock = req.body.latestBlock;
     var targetBlockNumber = req.body.targetBlockNumber;
     var issueDate = req.body.issueDate;
     var dueDate = req.body.dueDate;
-    var eventHash = req.body.eventHash;
     var lotteryNote = req.body.lotteryNote;
     // Server side
-    var randomKey = "2f2412ae411235123";
-    var script = "sample script";
+    const randomKey = crypto.randomBytes(32).toString('hex');
+    var script = selectScript(req.body.scriptNum);
+
+    var concatenated = "" + eventName + numOfWinners + targetBlockNumber + expectedAnnouncementDate + issueDate + dueDate + lotteryNote + script + randomKey;
+    var sha256 = crypto.createHash('sha256');
+    var eventHash = sha256.update(concatenated).digest('hex');
+
+    logger.debug("randomKey: ", randomKey);
+    logger.debug("selectedScript: ", script);
+    logger.debug("eventHash", eventHash);
 
     var allData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
@@ -343,8 +352,9 @@ app.post('/open', function(req, res) {
     // sleep.sleep(1);
     client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
         console.log("data", data);
-        console.log("response", response);
-        res.write("호스트 인증토큰(추후 업데이트 예정)");
+        var tx_id = data.tx_id_string_;
+        // console.log("response", response);
+        res.write(tx_id);
         res.end();
     });
 });
@@ -699,30 +709,34 @@ function QueryAllEvents(req, res) {
         // raw response 
         // console.log("response = " + response);
 
-        var payload = "null";
-        var tx_id = "null";
-        // console.log(tx_id);
-        // console.log(JSON.stringify(data));
-        // var s = "";
-        // for (var c in payload) {
-            // s += String.fromCharCode(c);
-        // }
+        var ccPayload = "null";
 
-        if (typeof payload !== "strings") {
-            logger.debug("Typeof payload:", typeof payload);
-            payload = "null";
-        }
-        console.log(typeof payload);
+        console.log(typeof ccPayload);
         console.log("tx_id", tx_id);
-        console.log("payload", payload);
 
-        tx_id = data.tx_id_string_;
-        payload = data.payload_;
+        var tx_id = data.tx_id_string_;
+        var ccPayload = data.payload_;
 
-        console.log(payload);
+        logger.debug("tx_id: ", tx_id);
+        logger.debug("ccPayload: ", ccPayload);
 
-        res.write(payload);
+        var sdkPayload = {
+            anchorPeer: "",
+            connectedPeers: "",
+        };
+
+        payload = {
+            "ccPayload": ccPayload,
+            "sdkPayload": sdkPayload,
+        };
+
+        // console.log(payload);
+
+        res.write(JSON.stringify(payload));
         res.end();
     });
 }
 
+function selectScript() {
+    return "sample 1";
+}
