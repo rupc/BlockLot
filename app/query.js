@@ -40,13 +40,16 @@ var queryChaincode = async function(peer, channelName, chaincodeName, args, fcn,
 			args: args
 		};
 		let response_payloads = await channel.queryByChaincode(request);
+       
+        // Why expressions like 'after move' is used here? It's hardcoded example semantics
 		if (response_payloads) {
 			for (let i = 0; i < response_payloads.length; i++) {
-				logger.info(args[0]+' now has ' + response_payloads[i].toString('utf8') +
-					' after the move');
+				// logger.info(args[0]+' now has ' + response_payloads[i].toString('utf8') +
+					// ' after the move');
 			}
-			return args[0]+' now has ' + response_payloads[0].toString('utf8') +
-				' after the move';
+			// return args[0]+' now has ' + response_payloads[0].toString('utf8') +
+				// ' after the move';
+			return args[0] + ' ' + response_payloads[0].toString('utf8');
 		} else {
 			logger.error('response_payloads is null');
 			return 'response_payloads is null';
@@ -81,6 +84,7 @@ var getBlockByNumber = async function(peer, channelName, blockNumber, username, 
 		return error.toString();
 	}
 };
+
 var getTransactionByID = async function(peer, channelName, trxnID, username, org_name) {
 	try {
 		// first setup the client for this org

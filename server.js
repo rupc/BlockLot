@@ -11,8 +11,10 @@ var cmd=require('node-cmd');
 var sleep = require('sleep');
 var crypto = require('crypto');
 var sjcl = require('sjcl');
-const commandLineArgs = require('command-line-args');
+var stringify = require("json-stringify-pretty-compact");
+var waitUntil = require('wait-until');
 
+const commandLineArgs = require('command-line-args');
 const optionDefinitions = [
     // option 'blockchain' set only when fabric blockchain network is contructed in docker
     { name: 'blockchain', alias: 'b', type: Boolean, defaultOption: false},
@@ -22,7 +24,7 @@ const optionDefinitions = [
 const cmd_options = commandLineArgs(optionDefinitions);
 
 var Client = require('node-rest-client').Client;
- 
+
 var client = new Client();
 var subscribeClient = new Client();
 
@@ -34,7 +36,7 @@ const logger = new (winston.Logger)({
     // colorize the output to the console
     new (winston.transports.Console)({
         timestamp: tsFormat,
-        colorize: true 
+        colorize: true
     })
   ]
 });
@@ -52,8 +54,8 @@ var appPort = 1185;
 var SDKWebServerAddress = "http://localhost:4000";
 var TokenForServer;
 
-var chaincode="lottery";
-var channelName="mychannel";
+var chaincodeName ="lottery";
+var channelName ="mychannel";
 var peers = ["peer0.org1.example.com","peer1.org1.example.com"];
 var anchorPeer = "peer0.org1.example.com";
 
@@ -133,6 +135,17 @@ app.get('/open-lottery.html', function(req, res) {
     response_client_html(res, "open-lottery.html");
 });
 
+app.get('/query-peers', function(req, res) {
+    var requestedPeers= {
+        "peers" : peers,
+        "anchorPeer" : anchorPeer,
+    };
+
+    var prettyJSON = JSON.stringify(requestedPeers, null, 2);
+
+    res.write(prettyJSON);
+    res.end();
+});
 
 var UserInfoTable = [];
 
@@ -155,6 +168,9 @@ function GetTokenFromSDKServer(identity, orgName) {
         secret = data.secret;
         logger.info("Token from REST-API", data.token);
         TokenForServer = "Bearer " + data.token;
+
+        fs.writeFileSync('TOKEN', TokenForServer, 'utf8');
+
     });
 }
 
@@ -182,28 +198,76 @@ app.post('/query-by-tx', function(req, res) {
     var url = "/channels/" + channelName + "/transactions/" + txid + "?peer=" + anchorPeer;
 
     var args = {
-        headers: { 
+        headers: {
             "Authorization" : TokenForServer,
             "Content-Type": "application/json" }
     };
 
     client.get(SDKWebServerAddress + url, args, function (data, response) {
-        logger.debug(data.validationCode);
-        // logger.debug(response);
-        console.dir(data, {depth: null, colors: true})
+        var prettyJSON = JSON.stringify(data, function(k,v){
+            if(v instanceof Array)
+                return JSON.stringify(v);
+            return v;
+        }, 2);
 
-        res.write(JSON.stringify(data, null, '\t'));
-        res.end("yo");
+        logger.debug(prettyJSON);
+        res.write(prettyJSON);
+        res.end("");
     });
 
 });
 
-// Query Instantiated chaincodes
-app.post('/query-by-instantiate-chaincode', function(req, res) {
+// Query installed chaincodes
+app.post('/query-by-chaincodes', function(req, res) {
+    var installURL = "/chaincodes/" + "?peer=" + anchorPeer + "&type=installed";
+    var instantiatedURL = "/chaincodes/" + "?peer=" + anchorPeer + "&type=instantiated";
 
-});
+    var args = {
+        headers: {
+            "Authorization" : TokenForServer,
+            "Content-Type": "application/json" }
+    };
 
-app.post('/query-by-channel', function(req, res) {
+    var installedJSON = undefined, instantiatedJSON;
+
+    req1 = client.get(SDKWebServerAddress + installURL, args, function (data, response) {
+        // var installedJSON = JSON.stringify(data, function(k,v){
+            // if(v instanceof Array)
+                // return JSON.stringify(v);
+            // return v;
+        // }, 2);
+        installedJSON = data;
+        // res.write(installedJSON);
+    });
+
+    waitUntil(100, 10, function condition() {
+        return (installedJSON !== undefined ? true : false);
+    }, function done(result) {
+        // result is true on success or false if the condition was never met
+
+        client.get(SDKWebServerAddress + instantiatedURL, args, function (data, response) {
+            // instantiatedJSON = JSON.stringify(data, function(k,v){
+            // if(v instanceof Array)
+            // return JSON.stringify(v);
+            // return v;
+            // }, 2);
+            instantiatedJSON = data;
+
+            var chaincodes = {
+                "installedChaincodes" : installedJSON,
+                "instantiatedChaincodes" : instantiatedJSON,
+            };
+
+            // while (installedJSON.constructor != Object) {};
+
+            var chaincodesJSON = JSON.stringify(chaincodes, null, 2);
+
+            logger.debug(chaincodesJSON);
+
+            res.write(chaincodesJSON);
+            res.end("");
+        });
+    });
 
 });
 
@@ -212,6 +276,27 @@ app.post('/query-by-block-by-number', function(req, res) {
 });
 
 app.post('/query-by-chaininfo', function(req, res) {
+    var channelName = req.body.channelName;
+    var url = "/channels/" + channelName + "?peer=" + anchorPeer;
+
+    var args = {
+        headers: {
+            "Authorization" : TokenForServer,
+            "Content-Type": "application/json" }
+    };
+
+    client.get(SDKWebServerAddress + url, args, function (data, response) {
+        var prettyJSON = JSON.stringify(data, function(k,v) {
+            if(v instanceof Array)
+                return JSON.stringify(v);
+            return v;
+        }, 2);
+
+        console.log(prettyJSON);
+
+        res.write(prettyJSON);
+        res.end("");
+    });
 
 });
 
@@ -235,7 +320,7 @@ app.post('/subscribe', function(req, res) {
     logger.info("nonce", nonce);
 
     // REST API 호출
-    // set content-type header and data as json in args parameter 
+    // set content-type header and data as json in args parameter
     var headerData = {
         "username" : identityHash,
         "orgName" : "Org1",
@@ -252,14 +337,14 @@ app.post('/subscribe', function(req, res) {
 
     // Get user token
     client.post(SDKWebServerAddress + "/users", args, function (data, response) {
-        // parsed response body as js object 
+        // parsed response body as js object
         // console.log(data);
-        // raw response 
+        // raw response
         // console.log(response);
         token = data.token;
         message = data.message;
         secret = data.secret;
-        
+
         logger.info(token, message, secret);
     });
 
@@ -275,7 +360,7 @@ app.post('/subscribe', function(req, res) {
 
     var args1 = {
         data: allData1,
-        headers: { 
+        headers: {
             "Authorization" : TokenForServer,
             "Content-Type": "application/json" }
     };
@@ -283,7 +368,7 @@ app.post('/subscribe', function(req, res) {
     // Subscribe given user
     // sleep.sleep(1);
     client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
-        // parsed response body as js object 
+        // parsed response body as js object
         console.log("data", data);
         var tx_id = data.tx_id_string_;
         var payload = data.payload_;
@@ -295,14 +380,14 @@ app.post('/subscribe', function(req, res) {
         console.log(typeof payload);
         console.log("tx_id", tx_id);
         console.log("payload", payload);
-        // raw response 
+        // raw response
         // console.log("response", response);
         // token = data.token;
         // message = data.message;
         // secret = data.secret;
-        
+
         // logger.info(token, message, secret);
-      
+
         res.write(identityHash);
         res.end();
     });
@@ -355,13 +440,13 @@ app.post('/open', function(req, res) {
     var allData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
-        "args" : ["create_lottery_event_hash", eventHash, eventName, 
+        "args" : ["create_lottery_event_hash", eventHash, eventName,
             issueDate, dueDate, expectedAnnouncementDate, targetBlockNumber, numOfMembers, numOfWinners, randomKey, script, lotteryNote],
     };
 
     var args = {
         data: allData,
-        headers: { 
+        headers: {
             "Authorization" : TokenForServer,
             "Content-Type": "application/json" }
     };
@@ -379,9 +464,16 @@ app.post('/open', function(req, res) {
 
 app.post('/validate-token', function(req, res) {
     var hostAuthToken = req.body.hostAuthToken;
+
+    function validateHostAuthToken(token) {
+        // TODO 나중에는 DB 쿼리하거나, (오프라인)파일에서 찾거나 하는 식으로 바꿀 예정
+        if (token == "sslab") return "true";
+        return "false";
+    }
     // Validate auth token
-    
-    res.write("true");
+    var verify = validateHostAuthToken(hostAuthToken);
+
+    res.write(verify);
     res.end();
 
 });
@@ -389,15 +481,18 @@ app.post('/validate-token', function(req, res) {
 app.post('/draw', function(req, res) {
     var eventHash = req.body.eventHash;
     var verifiableRandomKey = req.body.verifiableRandomKey;
+    verifiableRandomKey = "not needed not!";
     var allData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
         "args" : ["determine_winner", eventHash, verifiableRandomKey],
     };
 
+    logger.debug(allData);
+
     var args = {
         data: allData,
-        headers: { 
+        headers: {
             "Authorization" : TokenForServer,
             "Content-Type": "application/json" }
     };
@@ -480,7 +575,7 @@ app.post('/register-user', function(req, res) {
     });
     res.write("hi");
     res.end();
-    
+
 });
 
 var func_numargs_map = new Object();
@@ -580,7 +675,7 @@ function processAllFieldsOfTheForm(req, res) {
     var futureblock;
     var numOfMembers;
     var numOfWinners;
-    var memberList; 
+    var memberList;
     var randomKey;
     var ManifestHash;
     var args = [];
@@ -682,10 +777,10 @@ function processAllFieldsOfTheForm(req, res) {
                     + "<br>"
                     + "<br>"
                 );
-                    
+
             })
         }, 500);
-            
+
     });
 
     /* res.end(util.inspect({
@@ -702,7 +797,7 @@ if (cmd_options.blockchain) {
     setTimeout(e2e_test, 2000);
 } else {
 
-} 
+}
 
 
 function QueryAllEvents(req, res) {
@@ -714,17 +809,17 @@ function QueryAllEvents(req, res) {
 
     var args = {
         data: headerData,
-        headers: { 
+        headers: {
             "authorization" : TokenForServer,
-            "Content-Type": "application/json" 
+            "Content-Type": "application/json"
         },
         json:true
     };
 
     client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
-        // parsed response body as js object 
+        // parsed response body as js object
         // console.log("data = " + data);
-        // raw response 
+        // raw response
         // console.log("response = " + response);
 
         var ccPayload = "null";
@@ -739,8 +834,9 @@ function QueryAllEvents(req, res) {
         logger.debug("ccPayload: ", ccPayload);
 
         var sdkPayload = {
-            anchorPeer: "",
+            anchorPeer: anchorPeer,
             connectedPeers: "",
+            chaincodeName: chaincodeName,
         };
 
         payload = {

@@ -1,6 +1,7 @@
 # TOKEN에 최신 토큰 받아와서 아래에 넣어주기.
-TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjQ3MTY2NzAsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4NzE2NjcwfQ.sIgv1gKPb7oxR0R3S-3zzhZ1LOPTcLC3vh5RzlmEXIE"
-
+# TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjQ3NjkzNTgsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4NzY5MzU4fQ.uPYpLGQaIWvqJ-SIRm4M38Enn5m4iWhn-WK2p0t_WGA"
+TOKEN=$(head TOKEN)
+echo $TOKEN
 
 function createChannels() {
     curl -s -X POST \

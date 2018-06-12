@@ -30,6 +30,7 @@
     "formidable": "^1.2.1",
     "fs-extra": "^2.0.0",
     "gonode": "^0.1.2",
+    "json-stringify-pretty-compact": "^1.2.0",
     "jsonwebtoken": "^7.3.0",
     "log4js": "^0.6.38",
     "moment": "^2.22.1",
@@ -38,6 +39,7 @@
     "secure-random": "^1.1.1",
     "sjcl": "^1.0.7",
     "sleep": "^5.1.1",
+    "wait-until": "0.0.2",
     "winston": "^2.4.2"
   },
   "devDependencies": {

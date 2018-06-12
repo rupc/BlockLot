@@ -28,7 +28,7 @@ import (
     "github.com/hyperledger/fabric/core/chaincode/shim"
     pb "github.com/hyperledger/fabric/protos/peer"
 
-    "github.com/robertkrimen/otto"
+    // "github.com/robertkrimen/otto"
 )
 
 var logger = shim.NewLogger("LotteryCC")
@@ -85,25 +85,8 @@ type SimpleChaincode struct {
 }
 
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
-    vm := otto.New()
-    vm.Run(`
-    abc = 2 + 2;
-    console.log("The value of abc is " + abc); // 4
-    `)
-    vm.Run(sjcl)
-    vm.Run(
-    `
-    console.log("왜 이건 그냥 씹히냐1?")
-    var indexHash = sjcl.hash.sha256.hash("randomstring");
-    console.log("indexnhash" + indexHash);
-    console.log("왜 이건 그냥 씹히냐2?")
-    `)
 
-    vm.Run(`
-    abc += 4 ;
-    console.log("The value of abc in another vm?: " + abc); // 8
-    `)
-
+    // Initialize launching lottery
     openTxID := stub.GetTxID()
     chanID := stub.GetChannelID()
     creatorBytes, _ := stub.GetCreator()
@@ -133,6 +116,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
+        SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
 
@@ -154,6 +138,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
+        SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
 
@@ -167,14 +152,16 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         FutureBlockHeight: "400000",
         NumOfMembers: "100",
         NumOfWinners: "2",
-        NumOfRegistered: "8",
+        NumOfRegistered: "100",
         RandomKey: "241218793433130254621482405472826812551",
         VerifiableRandomkey: "UNDEFINED" ,
-        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah`,
+        //http://www.babynamewizard.com/the-top-1000-baby-names-of-2011-united-states-of-america
+        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah,Conor,Hank,Traci,Kara,Alice,Luther,Markus,North,Kamski,Chole,Amanda,Todd,Carl,Leo,Daniel,Ralph,Simon,Catherine,Jack,Julia,Smith,Anderson,Jones,Wright,Perez,Parker,Evans,Edwards,Colins,Carter,Robinson,Garcia,Taylor,Moore,Brown,James,Christoper,Robert,Michael,William,Richard,Joseph,Thomas,Steven,Kevin,Json,Edward,Lisa,Nancy,Karen,Betty,Helen,Sandra,Donna,Carol,Sharon,Laura,Sarah,Kimberly,Deborah,Mary,Patricia,Linda,Barbara,Sophia,Jacob,Noah,Mason,Ethan,Alexander,Aiden,Anthony,Matthew,Elijah,Joshua,Liam,Andrew,Logan,Benjamin,Mia,Ava,Emma,Ella,Lily,Grace,Samantha,Avery,Sofia,Aubrey,Victoria,Evelyn,Lucas,Zoe,Hannah`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
+        SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
 
@@ -186,16 +173,17 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
         FutureBlockHeight: "400000",
-        NumOfMembers: "100",
-        NumOfWinners: "5",
-        NumOfRegistered: "8",
+        NumOfMembers: "200",
+        NumOfWinners: "20",
+        NumOfRegistered: "200",
         RandomKey: "241218793433130254621482405472333332551",
         VerifiableRandomkey: "UNDEFINED" ,
-        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah`,
+        MemberList:  `Nan Hyeon-U, Ku Tae-Woong, Pak Min-Ho, Sagong Min-Ho, Tu Jung-Hee, Ryom Joon-Ho, Muk Song-Ho, Sun Ji-Hoon, Nam Seung-Woo, Kwon Minjun, Ya Songmin, Ch'a Ji-Hu, Tongbang Shin-Young, Ton In-Ho, Myong Shin, Chu Yeon-Seok, Kye Jun-Young, Kok Il-Seong, Chon Seong, Ping Hae-Seong, Hung Jeong-Ho, Nu Jung-Su, Ri Hyun-Shik, Uh Shin-Young, Kyo Kwang-Su, Un Chin-Ho, Hyon Hyonjun, Pyon Jong-Su, Mo Jong-Su, Yu Songmin, Hwan Yong-Su, P'yon Dong-Gun, Han Chihu, Kyon Jung-Hwan, Wang Min-Kyung, Chung Ji-Won, Mok Du-Ho, Ah Kyung-Sam, Ro Chung-Hee, Kong In-Su, Yu Jung-Hoon, Kwon Hyun-Jun, Myong Hae-Il, So Kyung-Sam, Om Seong-Hyeon, Tokko Ho-Jin, Chun Jung-Min, Pin Min-Kyu, Nan Gun, Chwa Jung-Hwan, Um Jeong-Ho, Nae Min-Kyu, Chon Seung-Ho, Roe Young-Ja, Ryo Seung-Heon, Chom Joon-Ho, Che Il-Song, To Do-Hyeon, Namgung Dae-Ho, T'ae Chong-Su, P'yo Chul-Soo, Pang Jun-Ho, Rang Chun-Ho, An In-Ho, Mo Jae-Hui, Mo Chang-Woo, No Sang-Min, Ri Chong-Ho, P'o Hee-Chul, Mangjol Yejun, Ong Seung-Eun, Wu Hyejin, Sam Jung-Hyun, Im Yong-Ja, Chon Kyong-Ja, Ping So-Yun, Hae Ae, Son Sun-Mi, Yop Su-Hwa, Ryang Ha'un, Ham Song-Hee, Che Hyo-Jin, Wi Se-Jung, Sim So-Ri, Na Yoo-Jin, Ch'ang Eun-Bi, Maeng Si-Yeon, Tan Yoo-Sun, Nan Sa-Rang, Cho Seong-Eon, Ton Jung-Ah, Yom Eun-Hee, Maeng Won-Sook, Yon Eun-Ji, Rim Sulgi, Cho Sujin, Ma Min-Ji, Myo So-Ri, Ch'o Jin-Hee, Kyon Na-Woon, Hyon Chi-Hye, Chun Eun-Ji, T'an Young-Ja, Chom Soo-Jin, Ru Ga-In, Yun Yoon-Ji, Si Mi-Hyun, Tam Yeh-Jin, Ong Mi-Sook, Ka Kyung-Hee, Sung Yu-Jin, Pi Yoon-Hee, Ch'ang Ji-Min, P'il Mi-Ri, Kye Min-Yung, Namgung Nam-Joo, Kung Su-Mi, Chup In-Hye, Ku Ha'un, Paek Jung-Eun, Sobong Eun-Soo, Son Han-Byul, Pong Jin-Yung, Ping Na-Woon, Pi Do-Yeon, Sung Kyung-Hee, Ham Ju-Hee, P'yon Mi-Yung, Pyon Ji-Sun, Rang Ji-Hyun, Chegal Song-Hee, Chang Kyong-Hui, Han Hwi-Hyang, Ye Yeh-Jin, Yom Tae-Hee, Namgung Jin-Yung, Si Min-Hee, Ch'a So-Yung, Yu Shin-Hye, Ran In-Young, Chwa Hyo-Rin, Hu Moon-Hee, Tae Yu-Jin, Tokko In-Suk, Ae Yi-Jae, Hu Go-Eun, Rang Min-Ju, Ran Ji-Ho, Ki Seung-Min, Paek Su-Mi, Oh Soo-Ah, Hwangbo San-Ha, Pang Ha-Na, Kung Sol-Bi, T'ae Sujin, Ku Ha-Na, Sagong Yun-Soo, Nae Hyun-Jung, Yuk Yoon-Jung, Hwang Ji-Ho, T'ae Eun-Jin, Ri Jung-Hee, Ae Min-Hee, Noe Go-Eun, Ham Na-Young, Roe Ji-Yung, Nan Eun-Soo, Pae Soo-Yeon, Ton Soyon, An Su-Yun, Kyo Chun-Ho, Tang Kyong-Su, P'o Do-Hyeon, Pin Young-Chul, Chup Kyung-Ho, Mok Byung-Ho, Cho Kyung-Gu, Ru Dong-Jun, Hu Ja-Kyung, Kong Min-Jae, Paek Minsu, Chom Chong-Yol, P'an Jeong-Mun, Yo Kyung-Sam, Changgok Shi-Woo, Yom Sang-Ki, Noe Tohyon, Ch'u Sang-Ki, Tong Ujin, Paek Chin-Ho, Om Chong-Yol, Sung Il-Song, Ran Hoon, On Chung-Hee, Yo Young-Ho, Tu Jung-Hoon, Kwak Young-Su, Pom Shin-Young, Chon Joon-Ho, Kye Hyun-Seok,`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,
         ChannelID: chanID,
+        SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
 
