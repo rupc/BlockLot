@@ -1,6 +1,6 @@
 var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
-var hostURL = "http://141.223.121.56:1185";
-// var hostURL = "http://192.168.0.12:1185";
+// var hostURL = "http://141.223.121.56:1185";
+var hostURL = "http://192.168.0.12:1185";
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 // Lottery structure. got this when clicking the row
 var gLottery;
@@ -45,13 +45,15 @@ function clickChaininfo() {
 
         "<li onclick='queryChain()' style='text-align: left;'><b>채널 이름</b>: <span data-toggle='tooltip' title='블록체인이 속한 채널의 이름을 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + channelName + "</span></li>" + 
 
+        "<li onclick='queryGenesisBlock()' style='text-align: left;'><b>최초 블록 조회</b>: <span data-toggle='tooltip' title='채널의 최초 블록(Genesis Block)을 조회합니다. 채널의 초기 설정을 알 수 있습니다.' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-file-text'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
+
         "<li id='opentxid' onclick='queryOpenTxID()' style='text-align: left;'><b>등록</b>: <span data-toggle='tooltip' title='행사 등록 트랜잭션 ID를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + openTxID + "</span></li>" + 
 
         "<li onclick='queryDrawTxID()' data-toggle='tooltip' title='추첨 트랜잭션 ID를 나타냅니다' style='text-align: left;'><b>추첨</b>: <span style='color:DarkBlue; cursor:pointer;'>" + drawTxID + "</span></li>" + 
 
         "<li style='text-align: left;'><b>응모</b>: " + subscribeTxIDs + "</li>" + 
 
-        "<li onclick='queryPeers()' style='text-align: left;'><b>피어 확인 </b>: <span data-toggle='tooltip' title='SDK 서버와 통신하는 피어 주소를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-bank'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
+        "<li onclick='queryPeers()' style='text-align: left;'><b>피어 목록</b>: <span data-toggle='tooltip' title='SDK 서버와 통신하는 블록체인 피어 주소를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-bank'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
 
         "<li onclick='queryInstalledChaincodes()' data-toggle='tooltip' title='설치되거나 초기화된 체인코드를 조회합니다' style='text-align: left;'><b>체인코드 조회</b>: <span style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-list-alt'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
 
@@ -76,6 +78,10 @@ function clickChaininfo() {
         width: 800,
         showCloseButton: true,
     });
+
+}
+
+function queryGenesisBlock() {
 
 }
 
@@ -154,7 +160,7 @@ function queryOpenTxID(obj) {
             // console.log(prettyJSON);
 
             swal({
-                title: "트랜잭션 조회",
+                title: "등록 트랜잭션 조회",
                 html: prettyJSON,
                 width:1200,
             });
@@ -166,11 +172,37 @@ function queryOpenTxID(obj) {
             hideSpinner();
         }
     });
-
-
 }
 
 function queryDrawTxID() {
+    console.log("queryDrawTxID", gLottery.drawTxID);
+    showSpinner();
+    var allData = {
+        "txid" : gLottery.openTxID,
+    };
+
+    $.ajax({
+        url: hostURL + "/query-by-tx",
+        type: "POST", 
+        data: allData,
+        success: function(responseData) {
+            console.log(responseData);
+            var prettyJSON = "<pre style='text-align: left;'>" + syntaxHighlight(responseData) + "</pre>"
+            // console.log(prettyJSON);
+
+            swal({
+                title: "추첨 트랜잭션 조회",
+                html: prettyJSON,
+                width:1200,
+            });
+
+            hideSpinner();
+        },
+        error: function() {
+            Swal("Fail");
+            hideSpinner();
+        }
+    });
 }
 
 // Query channel information. Channel forms logical blockchain
