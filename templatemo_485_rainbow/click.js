@@ -45,7 +45,9 @@ function clickChaininfo() {
 
         "<li onclick='queryChain()' style='text-align: left;'><b>채널 이름</b>: <span data-toggle='tooltip' title='블록체인이 속한 채널의 이름을 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + channelName + "</span></li>" + 
 
-        "<li onclick='queryGenesisBlock()' style='text-align: left;'><b>최초 블록 조회</b>: <span data-toggle='tooltip' title='채널의 최초 블록(Genesis Block)을 조회합니다. 채널의 초기 설정을 알 수 있습니다.' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-file-text'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
+        "<li onclick='queryGenesisBlock()' style='text-align: left;'><b>최초 블록 조회</b>: <span data-toggle='tooltip' title='오더링 서비스 노드의 최초 블록(Genesis Block)을 조회합니다.' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-file-text'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
+
+        "<li onclick='queryChannelTx()' style='text-align: left;'><b>채널 생성 트랜잭션</b>: <span data-toggle='tooltip' title='채널 생성 트랜잭션을 조회합니다.' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-asterisk'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
 
         "<li id='opentxid' onclick='queryOpenTxID()' style='text-align: left;'><b>등록</b>: <span data-toggle='tooltip' title='행사 등록 트랜잭션 ID를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + openTxID + "</span></li>" + 
 
@@ -81,8 +83,55 @@ function clickChaininfo() {
 
 }
 
-function queryGenesisBlock() {
+function queryChannelTx() {
+    showSpinner();
 
+    $.ajax({
+        url: hostURL + "/query-channeltx",
+        type: "GET", 
+        success: function(responseData) {
+            console.log(responseData);
+            var prettyJSON = "<pre style='text-align: left;'>" + responseData + "</pre>"
+            // console.log(prettyJSON);
+
+            swal({
+                title: "채널생성 트랜잭션 조회",
+                html: prettyJSON,
+                width:800,
+            });
+
+            hideSpinner();
+        },
+        error: function() {
+            Swal("Fail");
+            hideSpinner();
+        }
+    });
+}
+function queryGenesisBlock() {
+    showSpinner();
+
+    $.ajax({
+        url: hostURL + "/query-genesis-block",
+        type: "GET", 
+        success: function(responseData) {
+            console.log(responseData);
+            var prettyJSON = "<pre style='text-align: left;'>" + responseData + "</pre>"
+            // console.log(prettyJSON);
+
+            swal({
+                title: "최초 블록 조회",
+                html: prettyJSON,
+                width:1200,
+            });
+
+            hideSpinner();
+        },
+        error: function() {
+            Swal("Fail");
+            hideSpinner();
+        }
+    });
 }
 
 function queryPeers() {
@@ -1065,10 +1114,81 @@ $(document).ready(function() {
                         }
                     });
 
-                    return;
+                    // return;
 
                     var vrfyResponse = function() {
-                    
+
+                        $.ajax({
+                            url: hostURL + "/query-peers",
+                            type: "GET", 
+                            success: function(responseData) {
+                                console.log(responseData);
+                                // var prettyJSON = "<pre style='text-align: left;'>" + responseData + "</pre>"
+                                // console.log(prettyJSON);
+                                var parsedJSON = JSON.parse(responseData);
+                                // GetPeers
+                                var peers = parsedJSON.peers;
+
+                                // Select subset of peers to get response
+                                console.log("numOfPeers: ", peers.length);
+                                var numOfPeers = peers.length;
+                                var outputhtml = "";
+                                for(var i = 0; i < peers.length; ++i) {
+                                    outputhtml += "<div><input checked='checked' type='checkbox' id='" + peers[i] + "'>" +
+                                        "<label for=" + peers[i] + ">&nbsp;" + peers[i] + "</label></div>";
+                                }
+                                swal({
+                                    title: "검증 피어 선택",
+                                    html: outputhtml,
+                                    focusConfirm: false,
+                                    width: 600,
+                                    showCancelButton: true,
+                                    confirmButtonText: '확인',
+                                    showLoaderOnConfirm: true,
+                                    preConfirm: () => {
+                                        var selectedPeers = [];
+                                        for(var i = 0; i < numOfPeers; ++i) {
+                                            var checked = document.getElementById(peers[i]).getAttribute("checked");
+                                            console.log("Selected?: ", checked);
+                                            if (checked) {
+                                                selectedPeers.push(peers[i]);
+                                                console.log("SelectedPeer: ", peers[i]);
+                                            }
+                                        }
+                                        return {
+                                            selectedPeers: selectedPeers,
+                                        };
+                                    },
+                                    allowOutsideClick: () => !swal.isLoading()
+
+                                }).then((result) => {
+                                    if (result.value) {
+                                        var selectedPeers = result.value.selectedPeers;
+                                        console.log(selectedPeers);
+                                        var allData = {
+                                            "selectedPeers" : selectedPeers,
+                                        };
+                                        $.ajax({
+                                            url: hostURL + "/verify-peer-response",
+                                            type: "POST", 
+                                            data: allData,
+                                            success: function(responseData) {
+                                                console.log("hopho");
+                                            },
+                                            error: function() {
+                                                Swal("Fail");
+                                            }
+                                            // width:1200,
+                                        });
+
+                                    }
+                                });
+
+                            },
+                            error: function() {
+                                Swal("Fail");
+                            }
+                        });
                     };
 
                     var statVrfy = function() {
@@ -1083,6 +1203,7 @@ $(document).ready(function() {
                     
                     };
 
+                    return;
 
                     // Define query block func
 

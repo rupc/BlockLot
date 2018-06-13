@@ -156,7 +156,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         RandomKey: "241218793433130254621482405472826812551",
         VerifiableRandomkey: "UNDEFINED" ,
         //http://www.babynamewizard.com/the-top-1000-baby-names-of-2011-united-states-of-america
-        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah,Conor,Hank,Traci,Kara,Alice,Luther,Markus,North,Kamski,Chole,Amanda,Todd,Carl,Leo,Daniel,Ralph,Simon,Catherine,Jack,Julia,Smith,Anderson,Jones,Wright,Perez,Parker,Evans,Edwards,Colins,Carter,Robinson,Garcia,Taylor,Moore,Brown,James,Christoper,Robert,Michael,William,Richard,Joseph,Thomas,Steven,Kevin,Json,Edward,Lisa,Nancy,Karen,Betty,Helen,Sandra,Donna,Carol,Sharon,Laura,Sarah,Kimberly,Deborah,Mary,Patricia,Linda,Barbara,Sophia,Jacob,Noah,Mason,Ethan,Alexander,Aiden,Anthony,Matthew,Elijah,Joshua,Liam,Andrew,Logan,Benjamin,Mia,Ava,Emma,Ella,Lily,Grace,Samantha,Avery,Sofia,Aubrey,Victoria,Evelyn,Lucas,Zoe,Hannah`,
+        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah,Conor,Hank,Traci,Kara,Alice,Luther,Markus,North,Kamski,Chole,Amanda,Todd,Carl,Leo,Daniel,Ralph,Simon,Catherine,Jack,Julia,Smith,Anderson,Jones,Wright,Perez,Parker,Evans,Edwards,Colins,Carter,Robinson,Garcia,Taylor,Moore,Brown,James,Christoper,Robert,Michael,William,Richard,Joseph,Thomas,Steven,Kevin,Json,Edward,Lisa,Nancy,Karen,Betty,Helen,Sandra,Donna,Carol,Sharon,Laura,Sarah,Kimberly,Deborah,Mary,Patricia,Linda,Barbara,Sophia,Jacob,Noah,Mason,Ethan,Alexander,Aiden,Anthony,Matthew,Elijah,Joshua,Liam,Andrew,Logan,Benjamin,Mia,Ava,Emma,Ella,Lily,Grace,Samantha,Avery,Sofia,Aubrey,Victoria,Evelyn,Lucas`,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
         OpenTxID: openTxID,

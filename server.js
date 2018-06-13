@@ -13,6 +13,7 @@ var crypto = require('crypto');
 var sjcl = require('sjcl');
 var stringify = require("json-stringify-pretty-compact");
 var waitUntil = require('wait-until');
+const execSync = require('child_process').execSync;
 
 const commandLineArgs = require('command-line-args');
 const optionDefinitions = [
@@ -56,7 +57,17 @@ var TokenForServer;
 
 var chaincodeName ="lottery";
 var channelName ="mychannel";
-var peers = ["peer0.org1.example.com","peer1.org1.example.com"];
+var peers = ["peer0.org1.example.com",
+            "peer1.org1.example.com"];
+var connectedPeers = [
+        "peer0.org1.example.com",
+        "peer1.org1.example.com",
+        "peer2.org1.example.com",
+        "peer3.org1.example.com",
+        "peer4.org1.example.com",
+        "peer5.org1.example.com",
+        "peer6.org1.example.com",
+        ];
 var anchorPeer = "peer0.org1.example.com";
 
 function getChaincodeURL(channelName, chaincode) {
@@ -137,11 +148,33 @@ app.get('/open-lottery.html', function(req, res) {
 
 app.get('/query-peers', function(req, res) {
     var requestedPeers= {
-        "peers" : peers,
+        "peers" : connectedPeers,
         "anchorPeer" : anchorPeer,
     };
 
     var prettyJSON = JSON.stringify(requestedPeers, null, 2);
+
+    res.write(prettyJSON);
+    res.end();
+});
+
+app.get('/query-channeltx', function(req, res) {
+    var channelCreationTx = 
+        JSON.parse(execSync('configtxgen -inspectChannelCreateTx ./artifacts/channel/mychannel.tx | python -m json.tool'));
+    // logger.debug(channelCreationTx);
+    var prettyJSON = JSON.stringify(channelCreationTx, null, 2);
+    // var prettyJSON = genesisBlockInfo;
+
+    res.write(prettyJSON);
+    res.end();
+});
+
+app.get('/query-genesis-block', function(req, res) {
+    var genesisBlockInfo = 
+        JSON.parse(execSync('configtxgen -inspectBlock ./artifacts/channel/genesis.block | python -m json.tool'));
+    // logger.debug(genesisBlockInfo);
+    var prettyJSON = JSON.stringify(genesisBlockInfo, null, 2);
+    // var prettyJSON = genesisBlockInfo;
 
     res.write(prettyJSON);
     res.end();
@@ -193,6 +226,18 @@ function GetRandomNonceStr(len) {
     return nonce;
 }
 
+app.post('/verify-peer-response', function(req, res) {
+    var selectedPeers = req.body.selectedPeers;
+    var args = {
+        headers: {
+            "Authorization" : TokenForServer,
+            "Content-Type": "application/json" }
+    };
+
+    // logger.info(selectedPeers.length, selectedPeers);
+    logger.info(selectedPeers);
+});
+
 app.post('/query-by-tx', function(req, res) {
     var txid = req.body.txid;
     var url = "/channels/" + channelName + "/transactions/" + txid + "?peer=" + anchorPeer;
@@ -215,6 +260,36 @@ app.post('/query-by-tx', function(req, res) {
         res.end("");
     });
 
+        // "peer1.org1.example.com",
+    // var peerQueryFinished = [];
+    // var peerQueryResults = [];
+    // for (var i = 0; i <= 6; ++i) {
+        // peerQueryFinished[i] = false;
+    // }
+
+    // for (var i = 0; i <= connectedPeers.length; ++i) {
+        // var peerAddress = "peer" + i.toString() + ".org1.example.com";
+        // var url = "/channels/" + channelName + "/transactions/" + txid + "?peer=" + peerAddress;
+        // peerAddress.push(url);
+
+        // logger.debug(peerAddress, url);
+
+        // client.get(SDKWebServerAddress + url, args, function (data, response) {
+            // var prettyJSON = JSON.stringify(data, function(k,v){
+                // if(v instanceof Array)
+                    // return JSON.stringify(v);
+                // return v;
+            // }, 2);
+            // peerQueryResults.push(prettyJSON)
+            // peerQueryFinished[i] = true;
+        // });
+
+        // waitUntil(100, 10, function condition() {
+            // return (peerQueryFinished[i] !== false ? true : false);
+        // }, function done(result) {
+            // logger.debug(peerQueryResults[i]);
+        // });
+    // }
 });
 
 // Query installed chaincodes
