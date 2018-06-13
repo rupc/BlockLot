@@ -402,6 +402,9 @@ function formatDatetime(datetime) {
         day = "" + 0 + day;
     }
     var hour = datetime.getHours();
+    if (hour < 10) {
+        hour = "" + 0 + hour;
+    }
     var min = datetime.getMinutes();
     if (min <= 9) min = "" + 0 + min;
     // console.log(year, month, day, hour, min);
@@ -647,6 +650,7 @@ $(document).ready(function() {
                     }
                     Swal({
                         title: '(' + lotteryName + ')' + '\n이름을 입력하세요',
+                        text: "이메일을 입력하면, 이메일로 토큰이 전송됩니다",
                         type: 'question',
                         input: 'text',
                         showCancelButton: true,
@@ -677,13 +681,19 @@ $(document).ready(function() {
                                 type: "POST", 
                                 data: allData,
                                 success: function(responseData) {
-                                    Swal(
-                                        '참여 성공',
-                                        "<b>\"" + participantName + "\" </b>님이 " 
-                                        + "<b>\"" + lotteryName + "\"" + ' </b>행사에 등록!'
-                                        + "<br/>인증토큰" + responseData + "<br/><b><font color=\"red\">인증토큰은 당첨자임를 증명하기 위해서 반드시 갖고 있어야 합니다</font><br/>(복사해두세요)</b>",
-                                        'success'
-                                    )
+                                    if (validateEmail(participantName)) {
+                                        Swal('참여 성공', 
+                                            '입력하신 이메일로 당첨자 토큰을 전송하였습니다', 
+                                            'success');
+                                    } else {
+                                        Swal(
+                                            '참여 성공',
+                                            "<b>\"" + participantName + "\" </b>님이 " 
+                                            + "<b>\"" + lotteryName + "\"" + ' </b>행사에 등록!'
+                                            + "<br/>인증토큰" + responseData + "<br/><b><font color=\"red\">인증토큰은 당첨자임를 증명하기 위해서 반드시 갖고 있어야 합니다</font><br/>(복사해두세요)</b>",
+                                            'success'
+                                        )
+                                    }
 
                                     hideSpinner();
                                 },
@@ -1033,27 +1043,27 @@ $(document).ready(function() {
 
                     var numOfWinners = cell.getRow().getData().numOfWinners;
                     var verification = false;
+                    var outputhtml =
+                        '<div><input type="checkbox" id="randomSourceVrfy" value="randomSource"> \
+                        <label for="randomSourceVrfy"><span data-toggle="tooltip" title="추첨에 사용되는 랜덤 소스의 무결성을 검증합니다. 블록체인의 블록들의 전/후 해시 관계를 사용하여, 타겟 블록과 그 전의 블록들의 해시 값에 변화를 검증합니다.">랜덤 소스 검증</span></label></div>' +
 
+                        '<div><input type="checkbox" id="infoVrfy" value="info"> \
+                        <label for="infoVrfy"><span data-toggle="tooltip" title="추첨 행사 정보의 무결성을 검증합니다.">행사 정보 무결성 검증</span></label></div>' +
 
+                        '<div><input type="checkbox" id="winnerVrfy" value="winner"> \
+                        <label for="winnerVrfy"><span data-toggle="tooltip" title="당첨자를 다신 계산하여, 블록체인에 등록된 당첨자 목록과 일치하는지를 검증합니다.">당첨자 목록 검증</span></label></div>' +
+
+                        '<div><input type="checkbox" id="responseVrfy" value="response"> \
+                        <label for="responseVrfy"><span data-toggle="tooltip" title="다수 피어의 응답 값을 비교하여 검증합니다. 만약 일부 피어에 속한 블록체인의 상태가 조작 되었다면, 응답 값의 투표를 통해 가장 큰 표를 얻은 응답 값을 신뢰하는 방식으로 검증합니다. 이는 분산 장부의 특성을 활용하여 무결성을 검증하는 방법입니다.">응답 값 비교 검증</span></label></div>' +
+
+                        '<div><input type="checkbox" id="statVrfy" value="stat"> \
+                        <label for="statVrfy"><span data-toggle="tooltip" title="추첨 스크립트의 확률적 균일성을 검증합니다. 추첨 스크립트는 수 많은 시행에서 각 당첨자가 당첨될 확률이 균일해야 합니다.">통계적 검증</span></label></div>'
+
+// <span data-toggle='tooltip' title=''>" + eventHash + "</span>
                     swal({
                         type: 'question',
                         title: '검증 목록',
-                        html:
-                        '<div><input type="checkbox" id="randomSourceVrfy" value="randomSource"> \
-                        <label for="randomSourceVrfy">랜덤 소스 검증</label></div>' +
-
-                        '<div><input type="checkbox" id="infoVrfy" value="info"> \
-                        <label for="infoVrfy">행사 정보 무결성 검증</label></div>' +
-
-                        '<div><input type="checkbox" id="winnerVrfy" value="winner"> \
-                        <label for="winnerVrfy">당첨자 목록 검증</label></div>' +
-
-                        '<div><input type="checkbox" id="responseVrfy" value="response"> \
-                        <label for="responseVrfy">응답 값 비교 검증</label></div>' +
-
-                        '<div><input type="checkbox" id="statVrfy" value="stat"> \
-                        <label for="statVrfy">통계적 검증</label></div>'
-                        ,
+                        html: outputhtml ,
 
                         focusConfirm: false,
                         preConfirm: () => {
@@ -1175,7 +1185,15 @@ $(document).ready(function() {
                                             type: "POST", 
                                             data: allData,
                                             success: function(responseData) {
-                                                console.log("hopho");
+                                                var prettyJSON 
+                                                    = "<pre style='text-align: left;'>" 
+                                                        + responseData + "</pre>"
+
+                                                swal({
+                                                    title: "응답 값 검증 결과",
+                                                    html: prettyJSON,
+                                                    width:800,
+                                                });
                                             },
                                             error: function() {
                                                 Swal("Fail");
@@ -1710,3 +1728,8 @@ function syntaxHighlight(json) {
     });
 }
 
+// https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+function validateEmail(email) {
+  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email);
+}

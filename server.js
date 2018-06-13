@@ -13,6 +13,7 @@ var crypto = require('crypto');
 var sjcl = require('sjcl');
 var stringify = require("json-stringify-pretty-compact");
 var waitUntil = require('wait-until');
+var nodemailer = require('nodemailer');
 const execSync = require('child_process').execSync;
 const syncClient = require('sync-rest-client');
 
@@ -22,6 +23,15 @@ const optionDefinitions = [
     { name: 'blockchain', alias: 'b', type: Boolean, defaultOption: false},
     { name: 'test', alias: 't', type: String }
 ]
+
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'blockchainlottery@gmail.com',
+      // 조합론1234:whgkqfhs1234
+    pass: '조합론1234'
+  }
+});
 
 const cmd_options = commandLineArgs(optionDefinitions);
 
@@ -231,27 +241,60 @@ app.post('/verify-peer-response', function(req, res) {
     var eventHash = req.body.eventHash;
     var selectedPeers = req.body.selectedPeers;
 
+    var url = SDKWebServerAddress + "/channels/" + channelName + "/chaincodes/" + chaincodeName +"?peer=";
+
     var headerData = {
-        "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
+        // "peers" : ["peer0.org1.example.com"],
         "fcn" : "invoke",
         "args":["query_lottery_event_hash", eventHash]
     };
 
     var args = {
-        data: headerData,
+        // data: headerData,
         headers: {
             "authorization" : TokenForServer,
             "Content-Type": "application/json"
         },
         json:true
     };
+ // peer3.org1.example.com&fcn=$fcn&args=%5B%22"$args"%22%5D";
+
+    var fcn="invoke";
+    var cargs="query_lottery_event_hash\"," + "\"" +eventHash;
+    // for (var i = 0; i < 1; ++i) {
+    var voting = {
+    
+    };
+    var peersResponses = {};
 
     for (var i = 0; i < selectedPeers.length; ++i) {
-        logger.info(selectedPeers[i]);
-        syncClient.get('https://www.google.com');
+        var requestURL = url + selectedPeers[i] + "&fcn=" + fcn +
+            "&args=%5b%22" + cargs + "%22%5d";
+        var response = syncClient.get(requestURL, args);
+        const hash = crypto.createHash('sha256');
+        hash.update(response.body);
+        var hashed = hash.digest('hex');
 
+        if (voting[hashed] == undefined) {
+            voting[hashed] = 1;
+        } else {
+            voting[hashed]++;
+        }
+
+        peersResponses[selectedPeers[i]] = hashed;
+
+        logger.info(selectedPeers[i], requestURL);
+        logger.info(response.body);
     }
-    // logger.info(selectedPeers.length, selectedPeers);
+
+    var ResponseObject = {
+        "voting" : voting,
+        "peersResponses" : peersResponses,
+    };
+    var prettyJSON = JSON.stringify(ResponseObject, null, 2);
+
+    res.write(prettyJSON);
+    res.end();
 });
 
 app.post('/query-by-tx', function(req, res) {
@@ -391,6 +434,12 @@ app.post('/query-by-chaininfo', function(req, res) {
 
 });
 
+// https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+function validateEmail(email) {
+  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email);
+}
+
 app.post('/subscribe', function(req, res) {
     logger.info("/subscribe")
     // Unpack parameters
@@ -479,6 +528,27 @@ app.post('/subscribe', function(req, res) {
 
         // logger.info(token, message, secret);
 
+        if (validateEmail(participantName)) {
+            var mailText = "해당 토큰을 당첨자임을 증명하기 위해서 반드시 필요합니다." + identityHash;
+
+            var mailOptions = {
+                from: 'blockchainlottery@gmail.com',
+                to: participantName,
+                subject: '[BlockLot] 당첨자 인증 토큰',
+                text: mailText
+            };
+
+
+            transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                }
+
+                transporter.close();
+            });
+        }
         res.write(identityHash);
         res.end();
     });

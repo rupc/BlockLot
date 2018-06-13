@@ -6,6 +6,7 @@ chaincodeName="lottery"
 chaincodeVersion="v0"
 chaincodeType="golang"
 chaincodePath="github.com/lottery_cc"
+channelName="mychannel"
 
 peers="[\"peer0.org1.example.com\",
         \"peer1.org1.example.com\",
@@ -83,10 +84,23 @@ function chaincodesUpgrade() {
         -d "$reqBody"
 }
 
+# Query pre-registered lottery
+function chaincodeQuery() {
+    # fcn="query_lottery_event_hash"
+    fcn="invoke"
+    # args="[\"query_lottery_event_hash\"]"
+    args="query_lottery_event_hash\",\"6b60d2b794832322312lf44d479fd7c634eaf8e3r96e723d5d2224c9222222d1"
+    # args="[\"query_lottery_event_hash\",\"6b60d2b794832322312lf44d479fd7c634eaf8e3r96e723d5d2224c9222222d1\"]"
+    curl -s -X GET \
+        "http://localhost:4000/channels/$channelName/chaincodes/$chaincodeName?peer=peer3.org1.example.com&fcn=$fcn&args=%5B%22"$args"%22%5D" \
+        -H "authorization: $TOKEN" \
+        -H "content-type: application/json"
+
+}
 
 # createChannels
 # joinChannel
 # chaincodesInstall
-chaincodesInstantiate
+# chaincodesInstantiate
 # chaincodesUpgrade
-
+chaincodeQuery

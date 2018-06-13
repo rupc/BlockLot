@@ -36,6 +36,7 @@
     "moment": "^2.22.1",
     "node-cmd": "^3.0.0",
     "node-rest-client": "^3.1.0",
+    "nodemailer": "^4.6.6",
     "secure-random": "^1.1.1",
     "sjcl": "^1.0.7",
     "sleep": "^5.1.1",
