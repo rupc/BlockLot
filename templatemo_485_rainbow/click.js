@@ -1103,7 +1103,8 @@ $(document).ready(function() {
 
                             // TODO
                             if (responseVrfy) {
-                                vrfyResponse();
+                                var eventHash = cell.getRow().getData().eventHash;
+                                vrfyResponse(eventHash);
                             }
 
                             // TODO
@@ -1116,7 +1117,7 @@ $(document).ready(function() {
 
                     // return;
 
-                    var vrfyResponse = function() {
+                    var vrfyResponse = function(eventHash) {
 
                         $.ajax({
                             url: hostURL + "/query-peers",
@@ -1166,6 +1167,7 @@ $(document).ready(function() {
                                         var selectedPeers = result.value.selectedPeers;
                                         console.log(selectedPeers);
                                         var allData = {
+                                            "eventHash" : eventHash,
                                             "selectedPeers" : selectedPeers,
                                         };
                                         $.ajax({

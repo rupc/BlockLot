@@ -14,6 +14,7 @@ var sjcl = require('sjcl');
 var stringify = require("json-stringify-pretty-compact");
 var waitUntil = require('wait-until');
 const execSync = require('child_process').execSync;
+const syncClient = require('sync-rest-client');
 
 const commandLineArgs = require('command-line-args');
 const optionDefinitions = [
@@ -227,15 +228,30 @@ function GetRandomNonceStr(len) {
 }
 
 app.post('/verify-peer-response', function(req, res) {
+    var eventHash = req.body.eventHash;
     var selectedPeers = req.body.selectedPeers;
-    var args = {
-        headers: {
-            "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+
+    var headerData = {
+        "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
+        "fcn" : "invoke",
+        "args":["query_lottery_event_hash", eventHash]
     };
 
+    var args = {
+        data: headerData,
+        headers: {
+            "authorization" : TokenForServer,
+            "Content-Type": "application/json"
+        },
+        json:true
+    };
+
+    for (var i = 0; i < selectedPeers.length; ++i) {
+        logger.info(selectedPeers[i]);
+        syncClient.get('https://www.google.com');
+
+    }
     // logger.info(selectedPeers.length, selectedPeers);
-    logger.info(selectedPeers);
 });
 
 app.post('/query-by-tx', function(req, res) {

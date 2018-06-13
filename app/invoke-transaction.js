@@ -55,6 +55,7 @@ var invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn,
 		// the returned object has both the endorsement results
 		// and the actual proposal, the proposal will be needed
 		// later when we send a transaction to the orderer
+        // logger.debug(results);
 		var proposalResponses = results[0];
 		var proposal = results[1];
 
@@ -68,6 +69,7 @@ var invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn,
 				proposalResponses[i].response.status === 200) {
 				one_good = true;
 				logger.info('invoke chaincode proposal was good');
+                logger.debug(proposalResponses[i]);
 			} else {
 				logger.error('invoke chaincode proposal was bad');
 			}
@@ -80,6 +82,14 @@ var invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn,
 				proposalResponses[0].response.status, proposalResponses[0].response.message,
 				proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
             ret.payload_ = String(proposalResponses[0].response.payload);
+
+            logger.info("sizeOfProposalResponses=", proposalResponses.length);
+            logger.info(proposalResponses[1].response.payload);
+            // Get payloads from multiple peers
+            // for (var i = 0; i < proposalResponses.length; ++i) {
+                // ret.payloads_[i] = String(proposalResponses[i].response.payload);
+            // }
+
             // logger.info("mytest" + proposalResponses[0].response.payload);
             // logger.info("mytest2" + ret.payload_);
 			// wait for the channel-based event hub to tell us
