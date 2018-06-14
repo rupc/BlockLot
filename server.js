@@ -530,6 +530,7 @@ app.post('/subscribe', function(req, res) {
 
         if (validateEmail(participantName)) {
             var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div><div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
+                lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다"
                 "Token: <b><font color='red'>" + identityHash + "</font></b></div>";
 
             var mailOptions = {
