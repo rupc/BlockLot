@@ -208,7 +208,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         InputHash: "435df910d961f25d051a71e1daeed210cb43c31b4e92bf241a7a044bdebe50a5",
         EventName: "경진대회 응모 샘플1",
         IssueDate: "1498601618",
-        Duedate: "1524828600",
+        Duedate: "1530403200",
         AnnouncementDate: "1530403200",
         FutureBlockHeight: "620075",
         NumOfMembers: "2000",

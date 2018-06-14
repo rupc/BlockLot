@@ -320,6 +320,7 @@ function clickWinnerList() {
 
 //
 // Globally passed pariticpant lists
+var gMaxNumOfMembers;
 var gPariticipantList;
 function clickParticipantinfo() {
     var participantArray = gPariticipantList.split(",").filter(function(x) {
@@ -349,7 +350,7 @@ function clickParticipantinfo() {
     }
     text += "</ol>"
     swal({
-        title: '참여자 목록',
+        title: '참여자 목록(' + participantArray.length + '/' + gMaxNumOfMembers + ')' ,
         html: text,
         // width: 800,
         // heightì: 800,
@@ -556,6 +557,7 @@ $(document).ready(function() {
                     name: obj.EventName,
                     announceDate: obj.AnnouncementDate,
                     tsAnnouncementDate: tsAnnouncementDate,
+                    numOfMembers: obj.NumOfMembers, // Maximum members
                     numOfRegistered: obj.NumOfRegistered,
                     numOfWinners: obj.NumOfWinners,
                     subscribe: 1, check: 1, verify:1,
@@ -1541,6 +1543,7 @@ $(document).ready(function() {
                     // For remedy this, passing the list globally
 
                 
+                    gMaxNumOfMembers = cell.getRow().getData().numOfMembers;
                     gPariticipantList = cell.getRow().getData().participantList;
                     gWinnerList = cell.getRow().getData().winnerList;
                     gLotteryNote = cell.getRow().getData().lotteryNote;

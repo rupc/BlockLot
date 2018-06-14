@@ -81,6 +81,8 @@ var connectedPeers = [
         ];
 var anchorPeer = "peer0.org1.example.com";
 
+const kRestTimeout = 60000; // 60s
+
 function getChaincodeURL(channelName, chaincode) {
     return "/channels/" + channelName + "/chaincodes/" + chaincode;
 }
@@ -204,9 +206,15 @@ function GetTokenFromSDKServer(identity, orgName) {
     var args = {
         data: allData,
         headers: { "Content-Type": "application/json" },
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
-    client.post(SDKWebServerAddress + "/users", args, function (data, response) {
+    var getTokenReq = client.post(SDKWebServerAddress + "/users", args, function (data, response) {
         token = data.token;
         message = data.message;
         secret = data.secret;
@@ -215,6 +223,11 @@ function GetTokenFromSDKServer(identity, orgName) {
 
         fs.writeFileSync('TOKEN', TokenForServer, 'utf8');
 
+    });
+
+    getTokenReq.on('requestTimeout', function (req) {
+        console.log('request has expired');
+        getTokenReq.abort();
     });
 }
 
@@ -254,6 +267,12 @@ app.post('/verify-peer-response', function(req, res) {
         headers: {
             "authorization" : TokenForServer,
             "Content-Type": "application/json"
+        },
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
         },
         json:true
     };
@@ -304,7 +323,15 @@ app.post('/query-by-tx', function(req, res) {
     var args = {
         headers: {
             "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+            "Content-Type": "application/json" 
+        },
+
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
     client.get(SDKWebServerAddress + url, args, function (data, response) {
@@ -318,37 +345,6 @@ app.post('/query-by-tx', function(req, res) {
         res.write(prettyJSON);
         res.end("");
     });
-
-        // "peer1.org1.example.com",
-    // var peerQueryFinished = [];
-    // var peerQueryResults = [];
-    // for (var i = 0; i <= 6; ++i) {
-        // peerQueryFinished[i] = false;
-    // }
-
-    // for (var i = 0; i <= connectedPeers.length; ++i) {
-        // var peerAddress = "peer" + i.toString() + ".org1.example.com";
-        // var url = "/channels/" + channelName + "/transactions/" + txid + "?peer=" + peerAddress;
-        // peerAddress.push(url);
-
-        // logger.debug(peerAddress, url);
-
-        // client.get(SDKWebServerAddress + url, args, function (data, response) {
-            // var prettyJSON = JSON.stringify(data, function(k,v){
-                // if(v instanceof Array)
-                    // return JSON.stringify(v);
-                // return v;
-            // }, 2);
-            // peerQueryResults.push(prettyJSON)
-            // peerQueryFinished[i] = true;
-        // });
-
-        // waitUntil(100, 10, function condition() {
-            // return (peerQueryFinished[i] !== false ? true : false);
-        // }, function done(result) {
-            // logger.debug(peerQueryResults[i]);
-        // });
-    // }
 });
 
 // Query installed chaincodes
@@ -359,7 +355,14 @@ app.post('/query-by-chaincodes', function(req, res) {
     var args = {
         headers: {
             "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+            "Content-Type": "application/json" },
+
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
     var installedJSON = undefined, instantiatedJSON;
@@ -374,12 +377,19 @@ app.post('/query-by-chaincodes', function(req, res) {
         // res.write(installedJSON);
     });
 
+    req1.on('requestTimeout', function (req) {
+        console.log('request has expired');
+        req1.abort();
+        res.write("체인코드 조회 실패");
+        res.end("");
+    });
+
     waitUntil(100, 10, function condition() {
         return (installedJSON !== undefined ? true : false);
     }, function done(result) {
         // result is true on success or false if the condition was never met
 
-        client.get(SDKWebServerAddress + instantiatedURL, args, function (data, response) {
+        var queryByInstantiateChaincodeReq = client.get(SDKWebServerAddress + instantiatedURL, args, function (data, response) {
             // instantiatedJSON = JSON.stringify(data, function(k,v){
             // if(v instanceof Array)
             // return JSON.stringify(v);
@@ -401,6 +411,14 @@ app.post('/query-by-chaincodes', function(req, res) {
             res.write(chaincodesJSON);
             res.end("");
         });
+
+        queryByInstantiateChaincodeReq.on('requestTimeout', function (req) {
+            console.log('request has expired');
+            queryByInstantiateChaincodeReq.abort();
+
+            res.write("체인코드 조회 실패");
+            res.end("");
+        });
     });
 
 });
@@ -416,10 +434,17 @@ app.post('/query-by-chaininfo', function(req, res) {
     var args = {
         headers: {
             "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+            "Content-Type": "application/json" 
+        },
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
-    client.get(SDKWebServerAddress + url, args, function (data, response) {
+    var queryByChaininfoReq = client.get(SDKWebServerAddress + url, args, function (data, response) {
         var prettyJSON = JSON.stringify(data, function(k,v) {
             if(v instanceof Array)
                 return JSON.stringify(v);
@@ -432,6 +457,13 @@ app.post('/query-by-chaininfo', function(req, res) {
         res.end("");
     });
 
+    queryByChaininfoReq.on('requestTimeout', function (req) {
+        console.log('request has expired');
+        queryByChaininfoReq.abort();
+        res.write("체인정보 조회 실패");
+        res.end("");
+        return;
+    });
 });
 
 // https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
@@ -468,7 +500,13 @@ app.post('/subscribe', function(req, res) {
 
     var args = {
         data: headerData,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
     var token;
@@ -476,7 +514,7 @@ app.post('/subscribe', function(req, res) {
     var secret;
 
     // Get user token
-    client.post(SDKWebServerAddress + "/users", args, function (data, response) {
+    var subscribeReq = client.post(SDKWebServerAddress + "/users", args, function (data, response) {
         // parsed response body as js object
         // console.log(data);
         // raw response
@@ -486,6 +524,19 @@ app.post('/subscribe', function(req, res) {
         secret = data.secret;
 
         logger.info(token, message, secret);
+    });
+
+    subscribeReq.on('requestTimeout', function (req) {
+        logger.warn('응모시, 토큰 얻기에 실패함');
+        // subscribeReq.abort();
+        res.status(408).send("응모 실패");
+        return;
+    });
+
+    subscribeReq.on('error', function(err) {
+        res.status(408).send("응모 실패");
+        logger.error(err);
+        return;
     });
 
     // args[1] : Event hash (event identity) from client
@@ -502,12 +553,18 @@ app.post('/subscribe', function(req, res) {
         data: allData1,
         headers: {
             "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+            "Content-Type": "application/json" },
+        requestConfig: {
+            timeout: 30000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
     // Subscribe given user
     // sleep.sleep(1);
-    client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
+    var subscribeTxReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
         // parsed response body as js object
         console.log("data", data);
         var tx_id = data.tx_id_string_;
@@ -529,8 +586,9 @@ app.post('/subscribe', function(req, res) {
         // logger.info(token, message, secret);
 
         if (validateEmail(participantName)) {
-            var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div><div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
-                lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다"
+            var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div> \
+                <div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
+                "<div>" + lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다</div>" +
                 "Token: <b><font color='red'>" + identityHash + "</font></b></div>";
 
             var mailOptions = {
@@ -555,17 +613,30 @@ app.post('/subscribe', function(req, res) {
         res.end();
     });
 
+    subscribeTxReq.on('error', function(err) {
+        logger.error(err);
+        res.status(408).send("응모 실패");
+        return;
+    });
 
-        var useridentity = {
-            lotteryName_ : lotteryName,
-            participantName_ : participantName,
-            identityHash_ : identityHash,
-            nonce_ : nonce,
-            token_ : token
-        };
+    subscribeTxReq.on('requestTimeout', function (req) {
+        logger.warn('응모 트랜잭션 실패');
+        res.status(408).send("응모 실패");
+        subscribeTxReq.abort();
+        return;
+    });
 
-        UserInfoTable.push(useridentity);
-        console.log("New user added(" + UserInfoTable.length + ")");
+
+    var useridentity = {
+        lotteryName_ : lotteryName,
+        participantName_ : participantName,
+        identityHash_ : identityHash,
+        nonce_ : nonce,
+        token_ : token
+    };
+
+    UserInfoTable.push(useridentity);
+    console.log("New user added(" + UserInfoTable.length + ")");
 });
 
 app.post('/query-all-events', function(req, res) {
@@ -611,17 +682,33 @@ app.post('/open', function(req, res) {
         data: allData,
         headers: {
             "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+            "Content-Type": "application/json" },
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
     // Subscribe given user
     // sleep.sleep(1);
-    client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
+    var openReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
         console.log("data", data);
         var tx_id = data.tx_id_string_;
         // console.log("response", response);
         res.write(tx_id);
         res.end();
+    });
+
+    openReq.on('requestTimeout', function (req) {
+        logger.warn("행사 등록 실패");
+        res.status(408).send("행사 등록 실패");
+    });
+
+    openReq.on('error', function (req) {
+        logger.warn("행사 등록 실패");
+        res.status(408).send("행사 등록 실패");
     });
 });
 
@@ -657,16 +744,31 @@ app.post('/draw', function(req, res) {
         data: allData,
         headers: {
             "Authorization" : TokenForServer,
-            "Content-Type": "application/json" }
+            "Content-Type": "application/json" },
+
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
-    client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
+    var drawReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
         var tx_id = data.tx_id_string_;
         var payload = data.payload_;
         console.log("transaction id " + tx_id);
         console.log("payload : " + data.payload_);
         res.write(payload);
         res.end();
+    });
+
+    drawReq.on('requestTimeout', function (req) {
+        logger.warn('request has expired');
+        // drawReq.abort();
+
+        res.write("추첨 실패");
+        res.end("");
     });
 
 });
@@ -976,10 +1078,16 @@ function QueryAllEvents(req, res) {
             "authorization" : TokenForServer,
             "Content-Type": "application/json"
         },
-        json:true
+        json:true,
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
     };
 
-    client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
+    var queryAllEventsReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
         // parsed response body as js object
         // console.log("data = " + data);
         // raw response
@@ -1010,6 +1118,13 @@ function QueryAllEvents(req, res) {
         // console.log(payload);
 
         res.write(JSON.stringify(payload));
+        res.end();
+    });
+
+    queryAllEventsReq.on('requestTimeout', function (req) {
+        console.log('request has expired');
+        // queryAllEventsReq.abort();
+        res.write("행사 조회 실패");
         res.end();
     });
 }
