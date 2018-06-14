@@ -27,9 +27,9 @@ const optionDefinitions = [
 var transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'blockchainlottery@gmail.com',
+    user: 'blocklot.tokensender@gmail.com',
       // 조합론1234:whgkqfhs1234
-    pass: '조합론1234'
+    pass: 'whgkqfhstkscor1234'
   }
 });
 
@@ -529,13 +529,14 @@ app.post('/subscribe', function(req, res) {
         // logger.info(token, message, secret);
 
         if (validateEmail(participantName)) {
-            var mailText = "해당 토큰을 당첨자임을 증명하기 위해서 반드시 필요합니다." + identityHash;
+            var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div><div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
+                "Token: <b><font color='red'>" + identityHash + "</font></b></div>";
 
             var mailOptions = {
-                from: 'blockchainlottery@gmail.com',
+                from: 'blocklot.tokensender@gmail.com',
                 to: participantName,
                 subject: '[BlockLot] 당첨자 인증 토큰',
-                text: mailText
+                html: mailText
             };
 
 

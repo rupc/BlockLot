@@ -1,6 +1,6 @@
 var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
-// var hostURL = "http://141.223.121.56:1185";
-var hostURL = "http://192.168.0.12:1185";
+var hostURL = "http://141.223.121.56:1185";
+// var hostURL = "http://192.168.0.12:1185";
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 // Lottery structure. got this when clicking the row
 var gLottery;
@@ -79,6 +79,7 @@ function clickChaininfo() {
         html: text,
         width: 800,
         showCloseButton: true,
+        confirmButtonText: '확인',
     });
 
 }
@@ -285,9 +286,41 @@ function queryChain() {
     });
 }
 
+var gLotteryNote;
+function clickLotteryNote() {
+    swal({
+        title: "추첨 노트",
+        text: gLotteryNote,
+        confirmButtonText: '확인',
+    });
+}
+
+var gWinnerList;
+function clickWinnerList() {
+    // console.log(gWinnerList);
+    var outputText = "";
+
+    var winnerListArray = gWinnerList.split(",").filter(function(x) {
+        return (x.length > 0) && (x !== (undefined || null || " " || ' ' || '' || ""));
+    });
+
+    var numOfWinners = winnerListArray.length;
+
+    for (var i = 0; i < numOfWinners; ++i) {
+        outputText += "<font color='red'>" + (i+1) + "</font> " + winnerListArray[i] + "<br>";
+    }
+
+    swal({
+        title: "결과 확인",
+        html: outputText,
+        width: 400,
+        padding: 10,
+    });
+}
+
+//
 // Globally passed pariticpant lists
 var gPariticipantList;
-
 function clickParticipantinfo() {
     var participantArray = gPariticipantList.split(",").filter(function(x) {
         return (x.length > 0) && (x !== (undefined || null || " " || ' ' || '' || ""));
@@ -648,11 +681,13 @@ $(document).ready(function() {
                         });
                         return;
                     }
+
                     Swal({
                         title: '(' + lotteryName + ')' + '\n이름을 입력하세요',
                         text: "이메일을 입력하면, 이메일로 토큰이 전송됩니다",
                         type: 'question',
                         input: 'text',
+                        inputPlaceholder: '이름 혹은 이메일',
                         showCancelButton: true,
                         confirmButtonText: '확인',
                         cancelButtonText: '취소'
@@ -1507,6 +1542,8 @@ $(document).ready(function() {
 
                 
                     gPariticipantList = cell.getRow().getData().participantList;
+                    gWinnerList = cell.getRow().getData().winnerList;
+                    gLotteryNote = cell.getRow().getData().lotteryNote;
                     gLottery = {
                         drawTxID: cell.getRow().getData().drawTxID,
                         openTxID: cell.getRow().getData().openTxID,
@@ -1526,11 +1563,11 @@ $(document).ready(function() {
                         "<b>마감일</b> : " + cell.getRow().getData().dueDate  + "</br>" + 
                         "<b>발표일</b> : " + cell.getRow().getData().announceDate  + "</br>" + 
                         '<b>참여자</b> : <span style="cursor:pointer;"onclick="clickParticipantinfo()"><i class="fa fa-address-book"; style="font-size:26px;color:Blue"></i></span></br>' +
-                        "<b>우승자</b> : " + cell.getRow().getData().winnerList + "</br>" +
-                        "<b>추첨 노트</b> : " + cell.getRow().getData().lotteryNote + "</br>" +
+                        '<b>우승자</b> : <span style="cursor:pointer;"onclick="clickWinnerList()"><i class="material-icons" style="font-size:26px;color:Blue">people</i> </span></br>' +
                         "<b>타겟 블록</b> : <a target='_blank'  href='https://blockchain.info/ko/block-height/" + cell.getRow().getData().targetBlock + "'>" + cell.getRow().getData().targetBlock + "</a></br>" +
                         // "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
                         // "<b>랜덤키</b> : " + cell.getRow().getData().randomKey + "</br>"  + 
+                        '<b>추첨 노트</b> : <span style="cursor:pointer;"onclick="clickLotteryNote()"><i class="material-icons" style="font-size:26px;color:Blue">content_paste</i> </span></br>' +
                         "<b>체인 정보</b> : <span style='cursor:pointer;'onclick='clickChaininfo()'><i class='fa fa-list-alt'; style='font-size:26px;color:Blue'></i></span>" + 
                         ""
                         ,

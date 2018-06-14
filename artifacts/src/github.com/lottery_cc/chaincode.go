@@ -1,6 +1,8 @@
 package main
 
 import (
+    // "os"
+    // "bufio"
     // "math"
     // "math/big"
     // "crypto/rand"
@@ -85,6 +87,14 @@ type SimpleChaincode struct {
 }
 
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
+	_, args := stub.GetFunctionAndParameters()
+
+    // Read given files and comman concatenated single string
+    fakeNames100 := args[0]
+    fakeNames200 := args[1]
+    fakeNames400 := args[2]
+    fakeNames800 := args[3]
+
 
     // Initialize launching lottery
     openTxID := stub.GetTxID()
@@ -93,27 +103,30 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     openClientIdentity := fmt.Sprintf("%s", creatorBytes)
     // openClientIdentity := ""
     // Inititial data needed for testing
+
     logger.Info("Channel ID: " + chanID);
 	logger.Info("LotteryCC Init called")
     logger.Info("Initial test lottery's openTxID: " + openTxID);
     logger.Info("ClientIdentity: " + openClientIdentity);
 
+    // 샘플 추첨-100,200,400,800 은 오로지 보여주기식 추첨만 테스트
     sampleRegistered := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b794860dc84148f44d479fd7c634eaf8e3396e723d5d2224c98f38f5d1",
-        EventName: "추첨 테스트1",
+        EventName: "샘플 추첨-100",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
         FutureBlockHeight: "400000",
         NumOfMembers: "100",
-        NumOfWinners: "2",
-        NumOfRegistered: "8",
+        NumOfWinners: "10",
+        NumOfRegistered: "100",
         RandomKey: "241218793433130254621482405472826812551",
         VerifiableRandomkey: "UNDEFINED" ,
-        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Yongrae`,
+        MemberList:  fakeNames100,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        LotteryNote: "미국인 이름 100명 추첨 테스트",
         OpenTxID: openTxID,
         ChannelID: chanID,
         SubscribeTxIDs : openTxID,
@@ -122,20 +135,21 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
     sampleRegistered2 := lottery_event {
         Status: "REGISTERED",
-        InputHash: "6b60d2b7948321114148f44d479fd7c634eaf8e3396e723d5d2224c98f38f5d1",
-        EventName: "추첨 테스트2",
+        InputHash: "6b60d2b7932111113148f44d479fd7c634eaf8e3396e723d5d2224c98f38f5d1",
+        EventName: "샘플 추첨-200",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
         FutureBlockHeight: "400000",
-        NumOfMembers: "100",
-        NumOfWinners: "2",
-        NumOfRegistered: "8",
+        NumOfMembers: "200",
+        NumOfWinners: "20",
+        NumOfRegistered: "200",
         RandomKey: "241218793433130254621482405472826812551",
         VerifiableRandomkey: "UNDEFINED" ,
-        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah`,
+        MemberList:  fakeNames200,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        LotteryNote: "한국인 이름 200명 추첨 테스트",
         OpenTxID: openTxID,
         ChannelID: chanID,
         SubscribeTxIDs : openTxID,
@@ -145,20 +159,21 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleRegistered3 := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b7948603c1312lf44d479fd7c634eaf8e3r96e723d5d2224c9222222d1",
-        EventName: "추첨 테스트3",
+        EventName: "샘플 추첨-400",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
         FutureBlockHeight: "400000",
-        NumOfMembers: "100",
-        NumOfWinners: "2",
-        NumOfRegistered: "100",
+        NumOfMembers: "400",
+        NumOfWinners: "30",
+        NumOfRegistered: "400",
         RandomKey: "241218793433130254621482405472826812551",
-        VerifiableRandomkey: "UNDEFINED" ,
+        VerifiableRandomkey: "UNDEFINED",
         //http://www.babynamewizard.com/the-top-1000-baby-names-of-2011-united-states-of-america
-        MemberList:  `Joel,Ellie,Tommy,Bill,Tess,David,Riley,Sarah,Conor,Hank,Traci,Kara,Alice,Luther,Markus,North,Kamski,Chole,Amanda,Todd,Carl,Leo,Daniel,Ralph,Simon,Catherine,Jack,Julia,Smith,Anderson,Jones,Wright,Perez,Parker,Evans,Edwards,Colins,Carter,Robinson,Garcia,Taylor,Moore,Brown,James,Christoper,Robert,Michael,William,Richard,Joseph,Thomas,Steven,Kevin,Json,Edward,Lisa,Nancy,Karen,Betty,Helen,Sandra,Donna,Carol,Sharon,Laura,Sarah,Kimberly,Deborah,Mary,Patricia,Linda,Barbara,Sophia,Jacob,Noah,Mason,Ethan,Alexander,Aiden,Anthony,Matthew,Elijah,Joshua,Liam,Andrew,Logan,Benjamin,Mia,Ava,Emma,Ella,Lily,Grace,Samantha,Avery,Sofia,Aubrey,Victoria,Evelyn,Lucas`,
+        MemberList: fakeNames400,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        LotteryNote: "러시아인 이름 400명 추첨 테스트",
         OpenTxID: openTxID,
         ChannelID: chanID,
         SubscribeTxIDs : openTxID,
@@ -168,19 +183,20 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleRegistered4 := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b794832322312lf44d479fd7c634eaf8e3r96e723d5d2224c9222222d1",
-        EventName: "추첨 테스트4",
+        EventName: "샘플 추첨-800",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
         FutureBlockHeight: "400000",
-        NumOfMembers: "200",
-        NumOfWinners: "20",
-        NumOfRegistered: "200",
+        NumOfMembers: "800",
+        NumOfWinners: "40",
+        NumOfRegistered: "800",
         RandomKey: "241218793433130254621482405472333332551",
         VerifiableRandomkey: "UNDEFINED" ,
-        MemberList:  `Nan Hyeon-U, Ku Tae-Woong, Pak Min-Ho, Sagong Min-Ho, Tu Jung-Hee, Ryom Joon-Ho, Muk Song-Ho, Sun Ji-Hoon, Nam Seung-Woo, Kwon Minjun, Ya Songmin, Ch'a Ji-Hu, Tongbang Shin-Young, Ton In-Ho, Myong Shin, Chu Yeon-Seok, Kye Jun-Young, Kok Il-Seong, Chon Seong, Ping Hae-Seong, Hung Jeong-Ho, Nu Jung-Su, Ri Hyun-Shik, Uh Shin-Young, Kyo Kwang-Su, Un Chin-Ho, Hyon Hyonjun, Pyon Jong-Su, Mo Jong-Su, Yu Songmin, Hwan Yong-Su, P'yon Dong-Gun, Han Chihu, Kyon Jung-Hwan, Wang Min-Kyung, Chung Ji-Won, Mok Du-Ho, Ah Kyung-Sam, Ro Chung-Hee, Kong In-Su, Yu Jung-Hoon, Kwon Hyun-Jun, Myong Hae-Il, So Kyung-Sam, Om Seong-Hyeon, Tokko Ho-Jin, Chun Jung-Min, Pin Min-Kyu, Nan Gun, Chwa Jung-Hwan, Um Jeong-Ho, Nae Min-Kyu, Chon Seung-Ho, Roe Young-Ja, Ryo Seung-Heon, Chom Joon-Ho, Che Il-Song, To Do-Hyeon, Namgung Dae-Ho, T'ae Chong-Su, P'yo Chul-Soo, Pang Jun-Ho, Rang Chun-Ho, An In-Ho, Mo Jae-Hui, Mo Chang-Woo, No Sang-Min, Ri Chong-Ho, P'o Hee-Chul, Mangjol Yejun, Ong Seung-Eun, Wu Hyejin, Sam Jung-Hyun, Im Yong-Ja, Chon Kyong-Ja, Ping So-Yun, Hae Ae, Son Sun-Mi, Yop Su-Hwa, Ryang Ha'un, Ham Song-Hee, Che Hyo-Jin, Wi Se-Jung, Sim So-Ri, Na Yoo-Jin, Ch'ang Eun-Bi, Maeng Si-Yeon, Tan Yoo-Sun, Nan Sa-Rang, Cho Seong-Eon, Ton Jung-Ah, Yom Eun-Hee, Maeng Won-Sook, Yon Eun-Ji, Rim Sulgi, Cho Sujin, Ma Min-Ji, Myo So-Ri, Ch'o Jin-Hee, Kyon Na-Woon, Hyon Chi-Hye, Chun Eun-Ji, T'an Young-Ja, Chom Soo-Jin, Ru Ga-In, Yun Yoon-Ji, Si Mi-Hyun, Tam Yeh-Jin, Ong Mi-Sook, Ka Kyung-Hee, Sung Yu-Jin, Pi Yoon-Hee, Ch'ang Ji-Min, P'il Mi-Ri, Kye Min-Yung, Namgung Nam-Joo, Kung Su-Mi, Chup In-Hye, Ku Ha'un, Paek Jung-Eun, Sobong Eun-Soo, Son Han-Byul, Pong Jin-Yung, Ping Na-Woon, Pi Do-Yeon, Sung Kyung-Hee, Ham Ju-Hee, P'yon Mi-Yung, Pyon Ji-Sun, Rang Ji-Hyun, Chegal Song-Hee, Chang Kyong-Hui, Han Hwi-Hyang, Ye Yeh-Jin, Yom Tae-Hee, Namgung Jin-Yung, Si Min-Hee, Ch'a So-Yung, Yu Shin-Hye, Ran In-Young, Chwa Hyo-Rin, Hu Moon-Hee, Tae Yu-Jin, Tokko In-Suk, Ae Yi-Jae, Hu Go-Eun, Rang Min-Ju, Ran Ji-Ho, Ki Seung-Min, Paek Su-Mi, Oh Soo-Ah, Hwangbo San-Ha, Pang Ha-Na, Kung Sol-Bi, T'ae Sujin, Ku Ha-Na, Sagong Yun-Soo, Nae Hyun-Jung, Yuk Yoon-Jung, Hwang Ji-Ho, T'ae Eun-Jin, Ri Jung-Hee, Ae Min-Hee, Noe Go-Eun, Ham Na-Young, Roe Ji-Yung, Nan Eun-Soo, Pae Soo-Yeon, Ton Soyon, An Su-Yun, Kyo Chun-Ho, Tang Kyong-Su, P'o Do-Hyeon, Pin Young-Chul, Chup Kyung-Ho, Mok Byung-Ho, Cho Kyung-Gu, Ru Dong-Jun, Hu Ja-Kyung, Kong Min-Jae, Paek Minsu, Chom Chong-Yol, P'an Jeong-Mun, Yo Kyung-Sam, Changgok Shi-Woo, Yom Sang-Ki, Noe Tohyon, Ch'u Sang-Ki, Tong Ujin, Paek Chin-Ho, Om Chong-Yol, Sung Il-Song, Ran Hoon, On Chung-Hee, Yo Young-Ho, Tu Jung-Hoon, Kwak Young-Su, Pom Shin-Young, Chon Joon-Ho, Kye Hyun-Seok,`,
+        MemberList: fakeNames800,
         WinnerList: "UNDEFINED",
         Script: "sampleRegistered script1",
+        LotteryNote: "중국인 이름 800명 추첨 테스트",
         OpenTxID: openTxID,
         ChannelID: chanID,
         SubscribeTxIDs : openTxID,
@@ -190,12 +206,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleEnded := lottery_event {
         Status: "REGISTERED",
         InputHash: "435df910d961f25d051a71e1daeed210cb43c31b4e92bf241a7a044bdebe50a5",
-        EventName: "주간 블록체인 미팅 추첨 데모",
+        EventName: "경진대회 응모 샘플1",
         IssueDate: "1498601618",
         Duedate: "1524828600",
-        AnnouncementDate: "1524828600",
-        FutureBlockHeight: "520075",
-        NumOfMembers: "1000",
+        AnnouncementDate: "1530403200",
+        FutureBlockHeight: "620075",
+        NumOfMembers: "2000",
         NumOfWinners: "3",
         NumOfRegistered: "0",
         RandomKey: "26047126683174221326655007522109018381",
@@ -203,8 +219,10 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList: "",
         WinnerList: "UNDEFINED",
         Script: "sampleEnded script1",
+        LotteryNote: "참가자 응모용 샘플",
         OpenTxID: openTxID,
         ChannelID: chanID,
+        SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
 
@@ -305,6 +323,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         }`,
         OpenTxID: openTxID,
         ChannelID: chanID,
+        SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
 

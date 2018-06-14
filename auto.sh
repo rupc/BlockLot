@@ -1,7 +1,6 @@
 # TOKEN에 최신 토큰 받아와서 아래에 넣어주기.
 # TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjQ3NjkzNTgsInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI4NzY5MzU4fQ.uPYpLGQaIWvqJ-SIRm4M38Enn5m4iWhn-WK2p0t_WGA"
 TOKEN=$(head TOKEN)
-echo $TOKEN
 chaincodeName="lottery"
 chaincodeVersion="v0"
 chaincodeType="golang"
@@ -16,6 +15,25 @@ peers="[\"peer0.org1.example.com\",
         \"peer5.org1.example.com\",
         \"peer6.org1.example.com\"
         ]"
+
+# Fake names for sample lottery
+fakeNames="`pwd`/data/fake-names"
+
+oneh="$fakeNames/100-americans.txt"
+twoh="$fakeNames/200-koreans.txt"
+fourh="$fakeNames/400-russians.txt"
+eighth="$fakeNames/800-chineses.txt"
+
+function echoToken() {
+    echo $TOKEN
+}
+
+function echoFakeNames() {
+    echo $oneh
+    echo $twoh
+    echo $fourh
+    echo $eighth
+}
 
 function createChannels() {
     curl -s -X POST \
@@ -55,12 +73,17 @@ function chaincodesInstall() {
 }
 
 function chaincodesInstantiate() {
+    fakeNames100=$(cat $oneh | paste -s -d ',')
+    fakeNames200=$(cat $twoh | paste -s -d ',')
+    fakeNames400=$(cat $fourh | paste -s -d ',')
+    fakeNames800=$(cat $eighth | paste -s -d ',')
+
     reqBody="{
         \"chaincodeName\":\"$chaincodeName\",
         \"chaincodeType\": \"$chaincodeType\",
         \"chaincodeVersion\":\"$chaincodeVersion\",
         \"peers\": $peers,
-        \"args\":[\"\"]
+        \"args\":[\"$fakeNames100\", \"$fakeNames200\", \"$fakeNames400\", \"$fakeNames800\"]
     }"
     curl -s -X POST \
         http://localhost:4000/channels/mychannel/chaincodes \
@@ -98,9 +121,18 @@ function chaincodeQuery() {
 
 }
 
-# createChannels
-# joinChannel
-# chaincodesInstall
-# chaincodesInstantiate
+function networkInitialize() {
+    createChannels
+    joinChannel
+    chaincodesInstall
+    chaincodesInstantiate
+}
+
+echoToken
+
+networkInitialize
+
 # chaincodesUpgrade
-chaincodeQuery
+# chaincodeQuery
+echoFakeNames
+
