@@ -536,8 +536,12 @@ app.post('/subscribe', function(req, res) {
             res.status(408).send("응모 실패(이미 등록됨)");
             return;
         }
+        // sha256(token + participantName)
+        
+        var sha256 = crypto.createHash('sha256');
+        var encryptedIdentity = sha256.update(token + participantName).digest('hex');
 
-        subscribeInvoke();
+        subscribeInvoke(encryptedIdentity);
     });
 
 
@@ -557,12 +561,12 @@ app.post('/subscribe', function(req, res) {
     // args[1] : Event hash (event identity) from client
     // args[2] : Member name(or identity) from client
     // args[3] : current timestamp from client
-    subscribeInvoke = function() {
+    subscribeInvoke = function(encryptedIdentity) {
         var current_ts = "" + Math.floor(Date.now() / 1000);
         var allData1 = {
             "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
             "fcn" : "invoke",
-            "args" : ["subscribe", eventHash, identityHash, current_ts],
+            "args" : ["subscribe", eventHash, encryptedIdentity, current_ts],
         };
 
         var args1 = {
@@ -646,7 +650,8 @@ app.post('/subscribe', function(req, res) {
         var useridentity = {
             lotteryName_ : lotteryName,
             participantName_ : participantName,
-            identityHash_ : identityHash,
+            // identityHash_ : identityHash,
+            encryptedIdentity_ : encryptedIdentity,
             nonce_ : nonce,
             token_ : token
         };
@@ -1112,14 +1117,14 @@ function QueryAllEvents(req, res) {
 
         var ccPayload = "null";
 
-        console.log(typeof ccPayload);
-        console.log("tx_id", tx_id);
+        logger.info(typeof ccPayload);
+        logger.info("tx_id", tx_id);
 
         var tx_id = data.tx_id_string_;
         var ccPayload = data.payload_;
 
-        logger.debug("tx_id: ", tx_id);
-        logger.debug("ccPayload: ", ccPayload);
+        // logger.debug("tx_id: ", tx_id);
+        // logger.debug("ccPayload: ", ccPayload);
 
         var sdkPayload = {
             anchorPeer: anchorPeer,
