@@ -78,8 +78,10 @@ var getRegisteredUser = async function(username, userOrg, isJson) {
 			// client can now act as an agent for organization Org1
 			// first check to see if the user is already enrolled
 		var user = await client.getUserContext(username, true);
+        var alreadyEnrolled = false;
 		if (user && user.isEnrolled()) {
 			logger.info('Successfully loaded member from persistence');
+            alreadyEnrolled = true;
 		} else {
 			// user was not enrolled, so we will need an admin user object to register
 			logger.info('User %s was not enrolled, so we will need an admin user object to register',username);
@@ -100,6 +102,7 @@ var getRegisteredUser = async function(username, userOrg, isJson) {
 					success: true,
 					secret: user._enrollmentSecret,
 					message: username + ' enrolled Successfully',
+                    alreadyEnrolled : alreadyEnrolled,
 				};
 				return response;
 			}

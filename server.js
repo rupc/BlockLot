@@ -485,11 +485,11 @@ app.post('/subscribe', function(req, res) {
     var identityHash = "" + GetIdentityHash(participantName);
     var nonce = "" + GetRandomNonceStr(10);
 
-    logger.info("eventHash", eventHash);
-    logger.info("lotteryName", lotteryName);
-    logger.info("participantName", participantName);
-    logger.info("identityHash", identityHash);
-    logger.info("nonce", nonce);
+    logger.debug("eventHash", eventHash);
+    logger.debug("lotteryName", lotteryName);
+    logger.debug("participantName", participantName);
+    logger.debug("identityHash", identityHash);
+    logger.debug("nonce", nonce);
 
     // REST API 호출
     // set content-type header and data as json in args parameter
@@ -514,20 +514,35 @@ app.post('/subscribe', function(req, res) {
     var secret;
 
     // Get user token
+    // var response = syncClient.get(requestURL, args);
+    var subscribeInvoke;
     var subscribeReq = client.post(SDKWebServerAddress + "/users", args, function (data, response) {
         // parsed response body as js object
         // console.log(data);
         // raw response
-        // console.log(response);
         token = data.token;
         message = data.message;
         secret = data.secret;
 
-        logger.info(token, message, secret);
+        // console.log(response);
+        // logger.info("token: ", token);
+        // logger.info("message: ", message);
+        // logger.info("secret: ", secret);
+        // logger.info("response.alreadyEnrolled: ", response.alreadyEnrolled);
+        // logger.info("data.alreadyEnrolled: ", data.alreadyEnrolled);
+
+        if (data.alreadyEnrolled == true) {
+            logger.warn("%s is already enrolled", participantName);
+            res.status(408).send("응모 실패(이미 등록됨)");
+            return;
+        }
+
+        subscribeInvoke();
     });
 
+
     subscribeReq.on('requestTimeout', function (req) {
-        logger.warn('응모시, 토큰 얻기에 실패함');
+        logger.warn('응모 토큰 획득 실패');
         // subscribeReq.abort();
         res.status(408).send("응모 실패");
         return;
@@ -542,101 +557,103 @@ app.post('/subscribe', function(req, res) {
     // args[1] : Event hash (event identity) from client
     // args[2] : Member name(or identity) from client
     // args[3] : current timestamp from client
-    var current_ts = "" + Math.floor(Date.now() / 1000);
-    var allData1 = {
-        "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
-        "fcn" : "invoke",
-        "args" : ["subscribe", eventHash, identityHash, current_ts],
-    };
+    subscribeInvoke = function() {
+        var current_ts = "" + Math.floor(Date.now() / 1000);
+        var allData1 = {
+            "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
+            "fcn" : "invoke",
+            "args" : ["subscribe", eventHash, identityHash, current_ts],
+        };
 
-    var args1 = {
-        data: allData1,
-        headers: {
-            "Authorization" : TokenForServer,
-            "Content-Type": "application/json" },
-        requestConfig: {
-            timeout: 30000, //request timeout in milliseconds
-            noDelay: true, //Enable/disable the Nagle algorithm
-            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
-            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
-        },
-    };
+        var args1 = {
+            data: allData1,
+            headers: {
+                "Authorization" : TokenForServer,
+                "Content-Type": "application/json" },
+            requestConfig: {
+                timeout: 30000, //request timeout in milliseconds
+                noDelay: true, //Enable/disable the Nagle algorithm
+                keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+                keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+            },
+        };
 
-    // Subscribe given user
-    // sleep.sleep(1);
-    var subscribeTxReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
-        // parsed response body as js object
-        console.log("data", data);
-        var tx_id = data.tx_id_string_;
-        var payload = data.payload_;
+        // Subscribe given user
+        // sleep.sleep(1);
+        var subscribeTxReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
+            // parsed response body as js object
+            console.log("data", data);
+            var tx_id = data.tx_id_string_;
+            var payload = data.payload_;
 
-        if (typeof payload !== "strings") {
-            logger.debug("Typeof payload:", typeof payload);
-            payload = "null";
-        }
-        console.log(typeof payload);
-        console.log("tx_id", tx_id);
-        console.log("payload", payload);
-        // raw response
-        // console.log("response", response);
-        // token = data.token;
-        // message = data.message;
-        // secret = data.secret;
+            if (typeof payload !== "strings") {
+                logger.debug("Typeof payload:", typeof payload);
+                payload = "null";
+            }
+            logger.debug(typeof payload);
+            logger.debug("tx_id", tx_id);
+            logger.debug("payload", payload);
+            // raw response
+            // console.log("response", response);
+            // token = data.token;
+            // message = data.message;
+            // secret = data.secret;
 
-        // logger.info(token, message, secret);
+            // logger.info(token, message, secret);
 
-        if (validateEmail(participantName)) {
-            var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div> \
+            if (validateEmail(participantName)) {
+                var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div> \
                 <div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
-                "<div>" + lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다</div>" +
-                "Token: <b><font color='red'>" + identityHash + "</font></b></div>";
+                    "<div>" + lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다</div>" +
+                    "Token: <b><font color='red'>" + token + "</font></b></div>";
 
-            var mailOptions = {
-                from: 'blocklot.tokensender@gmail.com',
-                to: participantName,
-                subject: '[BlockLot] 당첨자 인증 토큰',
-                html: mailText
-            };
-
-
-            transporter.sendMail(mailOptions, function(error, info){
-                if (error) {
-                    console.log(error);
-                } else {
-                    console.log('Email sent: ' + info.response);
-                }
-
-                transporter.close();
-            });
-        }
-        res.write(identityHash);
-        res.end();
-    });
-
-    subscribeTxReq.on('error', function(err) {
-        logger.error(err);
-        res.status(408).send("응모 실패");
-        return;
-    });
-
-    subscribeTxReq.on('requestTimeout', function (req) {
-        logger.warn('응모 트랜잭션 실패');
-        res.status(408).send("응모 실패");
-        subscribeTxReq.abort();
-        return;
-    });
+                var mailOptions = {
+                    from: 'blocklot.tokensender@gmail.com',
+                    to: participantName,
+                    subject: '[BlockLot] 당첨자 인증 토큰',
+                    html: mailText
+                };
 
 
-    var useridentity = {
-        lotteryName_ : lotteryName,
-        participantName_ : participantName,
-        identityHash_ : identityHash,
-        nonce_ : nonce,
-        token_ : token
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                    }
+
+                    transporter.close();
+                });
+            }
+            res.write(token);
+            res.end();
+        });
+
+        subscribeTxReq.on('error', function(err) {
+            logger.error(err);
+            res.status(408).send("응모 실패");
+            return;
+        });
+
+        subscribeTxReq.on('requestTimeout', function (req) {
+            logger.warn('응모 트랜잭션 실패');
+            res.status(408).send("응모 실패");
+            subscribeTxReq.abort();
+            return;
+        });
+
+
+        var useridentity = {
+            lotteryName_ : lotteryName,
+            participantName_ : participantName,
+            identityHash_ : identityHash,
+            nonce_ : nonce,
+            token_ : token
+        };
+
+        UserInfoTable.push(useridentity);
+        console.log("New user added(" + UserInfoTable.length + ")");
     };
-
-    UserInfoTable.push(useridentity);
-    console.log("New user added(" + UserInfoTable.length + ")");
 });
 
 app.post('/query-all-events', function(req, res) {
