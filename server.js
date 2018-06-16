@@ -250,6 +250,34 @@ function GetRandomNonceStr(len) {
     return nonce;
 }
 
+app.post('/authenticate', function(req, res) {
+    var authToken = req.body.authToken;
+    var participantName = req.body.participantName;
+    var winnerListArray = req.body.winnerListArray;
+
+    var sha256 = crypto.createHash('sha256');
+    var encryptedIdentity = sha256.update(authToken + participantName).digest('hex');
+
+    var th;
+    var found = false;
+    for (var i = 0, l = winnerListArray.length; i < l; i++) {
+        var v = winnerListArray[i];
+        if (v == encryptedIdentity) {
+            th = i;
+            found = true;
+        }
+    }
+
+    if (found) {
+        var winnerMessage = participantName + " 님께서는" + th + " 순위로 당첨이 되셨습니다"
+        res.status(200).send(winnerMessage);
+    } else {
+        var noFoundMessage = participantName + "님은 당첨자 목록에 없습니다";
+        res.status(200).send(noFoundMessage);
+    }
+    
+});
+
 app.post('/verify-peer-response', function(req, res) {
     var eventHash = req.body.eventHash;
     var selectedPeers = req.body.selectedPeers;
@@ -276,7 +304,6 @@ app.post('/verify-peer-response', function(req, res) {
         },
         json:true
     };
- // peer3.org1.example.com&fcn=$fcn&args=%5B%22"$args"%22%5D";
 
     var fcn="invoke";
     var cargs="query_lottery_event_hash\"," + "\"" +eventHash;

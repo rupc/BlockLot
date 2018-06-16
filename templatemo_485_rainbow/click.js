@@ -298,8 +298,7 @@ function clickLotteryNote() {
 var gWinnerList;
 function clickWinnerList() {
     // console.log(gWinnerList);
-    var outputText = "";
-
+    var outputText;
     var winnerListArray = gWinnerList.split(",").filter(function(x) {
         return (x.length > 0) && (x !== (undefined || null || " " || ' ' || '' || ""));
     });
@@ -311,7 +310,7 @@ function clickWinnerList() {
     }
 
     swal({
-        title: "결과 확인",
+        title: "당첨자 확인",
         html: outputText,
         width: 400,
         padding: 10,
@@ -685,13 +684,13 @@ $(document).ready(function() {
                     }
 
                     Swal({
-                        title: '(' + lotteryName + ')' + '\n이름을 입력하세요',
-                        text: "이메일을 입력하면, 이메일로 토큰이 전송됩니다",
+                        title: '(' + lotteryName + ')' + '\n이름 또는 이메일을 입력하세요',
+                        html: "이메일을 입력하면, 이메일로 토큰이 전송됩니다<br>(<b>참여자의 익명성이 보장됩니다</b>)",
                         type: 'question',
                         input: 'text',
                         inputPlaceholder: '이름 혹은 이메일',
                         showCancelButton: true,
-                        confirmButtonText: '확인',
+                        confirmButtonText: '응모',
                         cancelButtonText: '취소'
                     }).then((result) => {
                         showSpinner();
@@ -956,15 +955,30 @@ $(document).ready(function() {
                     });
 
 
-                    var outputText = "";
+                    var outputText = 
+                        '<input id="participantName" placeholder="참여자 등록 이름" style="width:100%;" class="swal2-input">' +
+                        '<input id="authToken" placeholder="인증 토큰" style="float:left; width:100%;" class="swal2-input">' 
+                    + '<div onclick="showList()" style="cursor:pointer"><font color="DarkBlue">당첨자 명단 확인</font></div>'
+                    + '<div id="showListText" style="display:none;">'
 
                     for (var i = 0; i < numOfWinners; ++i) {
                         outputText += "<font color=\"red\">" + (i+1) + "</font> " + winnerListArray[i] + "<br>";
                     }
+                    outputText += "</div>"
+
 
                     swal({
-                        title: "("+ lotteryName + ")</br>결과 확인</br>",
+                        title: "("+ lotteryName + ")</br>당첨자 및 결과 확인</br>",
                         html: outputText,
+                        focusConfirm: false,
+                        preConfirm: () => {
+                            return {
+                                participantName : document.getElementById('participantName').value,
+                                authToken : document.getElementById('authToken').value,
+                            };
+                        },
+                        confirmButtonText: '당첨 여부 확인',
+                        cancelButtonText: '취소',
                         // text: outputText,
                         width: 400,
                         // height: 300,
@@ -974,7 +988,37 @@ $(document).ready(function() {
                                     url("/images/Congratst.gif")
                                     left top
                                     no-repeat
-                                  `
+                                  `,
+                        allowOutsideClick: () => !swal.isLoading()
+                    }).then((result) => {
+                        if (result.value) {
+                            var participantName = result.value.participantName;
+                            var authToken = result.value.authToken;
+                            var allData = {
+                                "participantName" : participantName,
+                                "authToken" : authToken,
+                                "winnerListArray" :  winnerListArray,
+                            };
+
+                            $.ajax({
+                                url: hostURL + "/authenticate",
+                                type: "POST", 
+                                data: allData,
+                                success: function(responseData) {
+                                    swal({
+                                        title: "당첨자 인증 결과",
+                                        html: responseData,
+                                        width:800,
+                                    });
+                                },
+                                error: function() {
+                                    Swal("Fail");
+                                }
+                                // width:1200,
+                            });
+
+                        }
+
                     });
 
                 },
@@ -1101,7 +1145,6 @@ $(document).ready(function() {
                         type: 'question',
                         title: '검증 목록',
                         html: outputhtml ,
-
                         focusConfirm: false,
                         preConfirm: () => {
                             return {
@@ -1772,4 +1815,9 @@ function syntaxHighlight(json) {
 function validateEmail(email) {
   var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(email);
+}
+
+function showList() {
+    console.log("call me");
+    $("#showListText").toggle();
 }
