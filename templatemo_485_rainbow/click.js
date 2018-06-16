@@ -1295,12 +1295,12 @@ $(document).ready(function() {
                                 .then((result) => {
                                 if (result.value) {
                                     swal({
-                                        title: 'All done!',
+                                        title: '검증 결과',
                                         html:
                                         'Your answers: <pre>' +
                                         JSON.stringify(result.value) +
                                         '</pre>',
-                                        confirmButtonText: 'Lovely!'
+                                        confirmButtonText: '확인'
                                     })
                                 }
                             })
