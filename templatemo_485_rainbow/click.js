@@ -850,8 +850,8 @@ $(document).ready(function() {
                             // call chaincode
                             var lotteryName = cell.getRow().getData().name;
                             var eventHash = cell.getRow().getData().eventHash;
-                            var verifiableRandomKey = "undefined";
-                            console.log(verifiableRandomKey);
+                            // var verifiableRandomKey = "undefined";
+                            // console.log(verifiableRandomKey);
 
                             var allData = {
                                 "eventHash" : eventHash,
@@ -1091,7 +1091,6 @@ $(document).ready(function() {
                 cellClick:function(e, cell){
 
                     if($('#falseDemo').data('clicked')) {
-
                         console.log("falsedemo...");
                         return;
                     }
@@ -1125,20 +1124,20 @@ $(document).ready(function() {
                     var numOfWinners = cell.getRow().getData().numOfWinners;
                     var verification = false;
                     var outputhtml =
-                        '<div><input type="checkbox" id="randomSourceVrfy" value="randomSource"> \
-                        <label for="randomSourceVrfy"><span data-toggle="tooltip" title="추첨에 사용되는 랜덤 소스의 무결성을 검증합니다. 블록체인의 블록들의 전/후 해시 관계를 사용하여, 타겟 블록과 그 전의 블록들의 해시 값에 변화를 검증합니다.">랜덤 소스 검증</span></label></div>' +
+                        '<div><input type="checkbox" id="randomSourceVrfy" value="randomSource" checked> \
+                        <label for="randomSourceVrfy"><span data-toggle="tooltip" title="' + textRandomSourceVrfy + '">랜덤 소스 검증</span></label></div>' +
 
-                        '<div><input type="checkbox" id="infoVrfy" value="info"> \
-                        <label for="infoVrfy"><span data-toggle="tooltip" title="추첨 행사 정보의 무결성을 검증합니다.">행사 정보 무결성 검증</span></label></div>' +
+                        '<div><input type="checkbox" id="infoVrfy" value="info" checked> \
+                        <label for="infoVrfy"><span data-toggle="tooltip" title="'+ textInfoVrfy +'">행사 정보 무결성 검증</span></label></div>' +
 
-                        '<div><input type="checkbox" id="winnerVrfy" value="winner"> \
-                        <label for="winnerVrfy"><span data-toggle="tooltip" title="당첨자를 다신 계산하여, 블록체인에 등록된 당첨자 목록과 일치하는지를 검증합니다.">당첨자 목록 검증</span></label></div>' +
+                        '<div><input type="checkbox" id="winnerVrfy" value="winner" checked> \
+                        <label for="winnerVrfy"><span data-toggle="tooltip" title="' +textWinnerVrfy +'">당첨자 목록 검증</span></label></div>' +
 
-                        '<div><input type="checkbox" id="responseVrfy" value="response"> \
-                        <label for="responseVrfy"><span data-toggle="tooltip" title="다수 피어의 응답 값을 비교하여 검증합니다. 만약 일부 피어에 속한 블록체인의 상태가 조작 되었다면, 응답 값의 투표를 통해 가장 큰 표를 얻은 응답 값을 신뢰하는 방식으로 검증합니다. 이는 분산 장부의 특성을 활용하여 무결성을 검증하는 방법입니다.">응답 값 비교 검증</span></label></div>' +
+                        '<div><input type="checkbox" id="responseVrfy" value="response" checked> \
+                        <label for="responseVrfy"><span data-toggle="tooltip" title="'+textResponseVrfy+'">응답 값 비교 검증</span></label></div>' +
 
-                        '<div><input type="checkbox" id="statVrfy" value="stat"> \
-                        <label for="statVrfy"><span data-toggle="tooltip" title="추첨 스크립트의 확률적 균일성을 검증합니다. 추첨 스크립트는 수 많은 시행에서 각 당첨자가 당첨될 확률이 균일해야 합니다.">통계적 검증</span></label></div>'
+                        '<div><input type="checkbox" id="statVrfy" value="stat" checked> \
+                        <label for="statVrfy"><span data-toggle="tooltip" title="'+textStatVrfy+'">통계적 검증</span></label></div>'
 
 // <span data-toggle='tooltip' title=''>" + eventHash + "</span>
                     swal({
@@ -1173,35 +1172,121 @@ $(document).ready(function() {
                             var responseVrfy = result.value.responseVrfy;
                             var statVrfy = result.value.statVrfy;
 
+                            var isRandomSourceVrfy;
+                            var isInfoVrfy ;
+                            var isWinnerVrfy;
+                            var isResponseVrfy;
+                            var isStatVrfy; 
+
+                            var verifyProgressStep = [];
+                            var sweetModal = [];
+
                             console.log(randomSourceVrfy, infoVrfy, 
                                 winnerVrfy, responseVrfy, statVrfy);
 
                             // TODO
                             if (randomSourceVrfy) {
-                                vrfyRandomsource();
+                                // vrfyRandomsource();
+                                verifyProgressStep.push("랜덤");
+                                sweetModal.push({
+                                    title: '랜덤 소스 무결성 검증',
+                                    text: textRandomSourceVrfy,
+                                    backdrop: `
+                                    rgba(0,0,123,0.4)
+                                    url("/images/BlockChain-Animated-Proof.gif")
+                                    left top
+                                    no-repeat
+                                  `,
+                                    preConfirm: () => {
+                                        // 여기섯 ... ajax (4~번)미친듯이 호출
+                                        // vrfyRandomSource(targetBlock, 1);
+// 416634
+                                        // isRandomSourceVrfy = vrfyRandomSource(targetBlock, 1);
+                                        isRandomSourceVrfy = vrfyRandomSource(targetBlock, 1);
+                                        if (isRandomSourceVrfy) {
+                                            console.log("랜덤 소스 무결성 검증 성공!");
+                                        }
+                                    },
+                                });
                             }
 
                             // TODO
                             if (infoVrfy) {
-                                vrfyInfo();
+                                // vrfyInfo();
+                                verifyProgressStep.push("행사");
+                                sweetModal.push({
+                                    title: '행사 정보 무결성 검증',
+                                    text: textInfoVrfy,
+                                    preConfirm: () => {
+                                        // 검증키 사용하여 검증
+                                        isInfoVrfy = vrfyInfo(verifiableRandomKey, lottery);
+                                        console.log("행사 정보 무결성 검증");
+                                    },
+                                });
                             }
 
                             // TODO
                             if (winnerVrfy) {
-                                vrfyWinner();
+                                // vrfyWinner();
+                                verifyProgressStep.push("당첨");
+                                sweetModal.push({
+                                    title: '당첨자 목록 검증',
+                                    text: textWinnerVrfy,
+                                    preConfirm: () => {
+                                        // 당첨자 재계산 후 목록 비교
+                                        console.log("당첨자 목록 검증");
+                                    },
+                                });
                             }
 
                             // TODO
                             if (responseVrfy) {
-                                var eventHash = cell.getRow().getData().eventHash;
-                                vrfyResponse(eventHash);
+                                // var eventHash = cell.getRow().getData().eventHash;
+                                // vrfyResponse(eventHash);
+                                verifyProgressStep.push("응답");
+                                sweetModal.push({
+                                    title: '응답 값 비교 검증',
+                                    text: textResponseVrfy,
+                                    preConfirm: () => {
+                                        console.log("응답 값 비교 검증");
+                                    },
+                                });
                             }
 
                             // TODO
                             if (statVrfy) {
-                                vrfyStat();
+                                // vrfyStat();
+                                // swal.closeModal()
+                                // document.getElementById('chartbtn').click();
+                                verifyProgressStep.push("통계");
+                                sweetModal.push({
+                                    title: '추첨 스크립트의 통계적 검증',
+                                    text: textStatVrfy,
+                                    preConfirm: () => {
+                                        console.log("통계");
+                                    },
+                                });
                             }
 
+
+                            swal.mixin({
+                                confirmButtonText: '다음',
+                                cancelButtonText: '취소',
+                                showCancelButton: true,
+                                progressSteps: verifyProgressStep,
+                            }).queue(sweetModal)
+                                .then((result) => {
+                                if (result.value) {
+                                    swal({
+                                        title: 'All done!',
+                                        html:
+                                        'Your answers: <pre>' +
+                                        JSON.stringify(result.value) +
+                                        '</pre>',
+                                        confirmButtonText: 'Lovely!'
+                                    })
+                                }
+                            })
                         }
                     });
 
@@ -1590,6 +1675,7 @@ $(document).ready(function() {
                     gPariticipantList = cell.getRow().getData().participantList;
                     gWinnerList = cell.getRow().getData().winnerList;
                     gLotteryNote = cell.getRow().getData().lotteryNote;
+
                     gLottery = {
                         drawTxID: cell.getRow().getData().drawTxID,
                         openTxID: cell.getRow().getData().openTxID,
@@ -1631,7 +1717,7 @@ $(document).ready(function() {
             {title:"등록일", field:"issueDate", align:"center", width:"8px",headerSort:false},
             {title:"마감일", field:"dueDate", align:"center", width:"8px",headerSort:false},
             {title:"랜덤키", field:"randomKey", align:"center", width:"8px",headerSort:false},
-            {title:"검증기", field:"verifiableRandomKey", align:"center", width:"8px",headerSort:false},
+            {title:"검증키", field:"verifiableRandomKey", align:"center", width:"8px",headerSort:false},
             {title:"우승자", field:"winnerList", align:"center", width:"8px",headerSort:false},
             {title:"참여자", field:"participantList", align:"center", width:"8px",headerSort:false},
             {title:"추첨 노트", field:"lotteryNote", align:"center", width:"8px",headerSort:false},

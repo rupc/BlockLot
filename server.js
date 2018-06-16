@@ -125,6 +125,8 @@ app.use("/load-awesome", express.static(__dirname + "/load-awesome/css/"));
 app.use("/js", express.static(__dirname + "/templatemo_485_rainbow/js/"));
 app.use("/img", express.static(__dirname + "/templatemo_485_rainbow/img/"));
 app.use("/charts.js", express.static(__dirname + "/templatemo_485_rainbow/charts.js"));
+app.use("/verification.js", express.static(__dirname + "/templatemo_485_rainbow/verification.js"));
+app.use("/sha256.js", express.static(__dirname + "/templatemo_485_rainbow/sha256.js"));
 app.use("/charts.css", express.static(__dirname + "/templatemo_485_rainbow/charts.css"));
 
 app.use("/tabulator/*", express.static(__dirname + "/tabulator/*"));
