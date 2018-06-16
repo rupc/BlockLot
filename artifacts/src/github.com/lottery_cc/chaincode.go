@@ -797,6 +797,7 @@ func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) 
     logger.Info("winner_listNames: %s\n", winner_listNames)
     logger.Info("encryptedMemberList: %s\n", encryptedMemberList)
     logger.Info("nonce: %s\n", nonce)
+
     var winner_list_names []string
 
     for i := 0; i < len(winner_list); i++ {

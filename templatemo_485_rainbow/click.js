@@ -1199,13 +1199,11 @@ $(document).ready(function() {
                                     no-repeat
                                   `,
                                     preConfirm: () => {
-                                        // 여기섯 ... ajax (4~번)미친듯이 호출
-                                        // vrfyRandomSource(targetBlock, 1);
-// 416634
-                                        // isRandomSourceVrfy = vrfyRandomSource(targetBlock, 1);
                                         isRandomSourceVrfy = vrfyRandomSource(targetBlock, 1);
                                         if (isRandomSourceVrfy) {
                                             console.log("랜덤 소스 무결성 검증 성공!");
+                                        } else {
+                                            console.log("랜덤 소스 무결성 검증 실패!");
                                         }
                                     },
                                 });
@@ -1218,10 +1216,21 @@ $(document).ready(function() {
                                 sweetModal.push({
                                     title: '행사 정보 무결성 검증',
                                     text: textInfoVrfy,
+                                    backdrop: `
+                                    rgba(0,0,123,0.4)
+                                    url("/images/document-integrity.gif")
+                                    left top
+                                    no-repeat
+                                  `,
                                     preConfirm: () => {
                                         // 검증키 사용하여 검증
-                                        isInfoVrfy = vrfyInfo(verifiableRandomKey, lottery);
-                                        console.log("행사 정보 무결성 검증");
+                                        var lottery = cell.getRow().getData();
+                                        isInfoVrfy = vrfyInfo(lottery);
+                                        if (isInfoVrfy) {
+                                            console.log("행사 정보 무결성 검증 성공");
+                                        } else {
+                                            console.log("행사 정보 무결성 검증 실패");
+                                        }
                                     },
                                 });
                             }
@@ -1231,10 +1240,16 @@ $(document).ready(function() {
                                 // vrfyWinner();
                                 verifyProgressStep.push("당첨");
                                 sweetModal.push({
-                                    title: '당첨자 목록 검증',
+                                    title: '당첨자 명단 검증',
                                     text: textWinnerVrfy,
                                     preConfirm: () => {
                                         // 당첨자 재계산 후 목록 비교
+                                        isWinnerVrfy = vrfyWinner();
+                                        if (isWinnerVrfy) {
+                                            console.log("당첨자 명단 검증 성공");
+                                        } else {
+                                            console.log("당첨자 명단 검증 실패");
+                                        }
                                         console.log("당첨자 목록 검증");
                                     },
                                 });
@@ -1250,6 +1265,7 @@ $(document).ready(function() {
                                     text: textResponseVrfy,
                                     preConfirm: () => {
                                         console.log("응답 값 비교 검증");
+                                        // "vrfyResponse" : vrfyResponse,
                                     },
                                 });
                             }

@@ -781,8 +781,6 @@ app.post('/validate-token', function(req, res) {
 
 app.post('/draw', function(req, res) {
     var eventHash = req.body.eventHash;
-    var verifiableRandomKey = req.body.verifiableRandomKey;
-    verifiableRandomKey = "not needed not!";
     var allData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
