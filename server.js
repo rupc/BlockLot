@@ -786,7 +786,7 @@ app.post('/draw', function(req, res) {
     var allData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
-        "args" : ["determine_winner", eventHash, verifiableRandomKey],
+        "args" : ["determine_winner", eventHash],
     };
 
     logger.debug(allData);

@@ -578,6 +578,7 @@ $(document).ready(function() {
                     openClientIdentity : obj.OpenClientIdentity,
                     anchorPeer : obj.AnchorPeer,
                     chaincodeName : obj.ChaincodeName,
+                    verifiableRandomKey : obj.VerifiableRandomkey,
                 }
 
                 var printQueryInfo = function(obj) {

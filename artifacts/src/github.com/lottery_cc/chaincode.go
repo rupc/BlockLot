@@ -56,7 +56,7 @@ type lottery_event struct {
     InputHash       string `json:"InputHash"` // built from eventname, duedate, num of members, winners and member list, randomkey from server
     FutureBlockHeight string `json:"FutureBlockHeight"`
     WinnerList      string `json:"WinnerList"` // comma seperated winner list
-    Script          string `json:"Script"` // script text for determine_winner()
+    Script          string `json:"Script"` // script text for draw()
     VerifiableRandomkey string `json:"VerifiableRandomkey"`
     LotteryNote string `json:"LotteryNote"`
     DrawTxID string `json:"DrawTxID"`
@@ -70,11 +70,12 @@ type lottery_event struct {
 
 func (l lottery_event) GetAllConcats() string {
     var allConCats string = ""
-    allConCats = l.EventName + l.IssueDate + l.Duedate + l.AnnouncementDate + l.NumOfMembers + l.NumOfWinners + l.MemberList + l.RandomKey + l.InputHash + l.FutureBlockHeight + l.WinnerList + l.Script
+    allConCats = l.EventName + l.IssueDate + l.Duedate + l.AnnouncementDate + l.NumOfMembers + l.NumOfWinners + l.MemberList + l.RandomKey + l.InputHash + l.FutureBlockHeight + l.WinnerList + l.Script + l.LotteryNote + l.DrawTxID + l.ChannelID
     return allConCats
 }
 
 // Do sha256 all concatenated strings
+// 바이트 단위인가?
 func (l lottery_event) GetVerifiableRandomKeyfromLottery() string {
     var allConCats = l.GetAllConcats()
     h := sha256.New()
@@ -391,8 +392,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.query_target_block(stub, args)
 	}
 
-	if args[0] == "determine_winner" {
-		return t.determine_winner(stub, args)
+	if args[0] == "draw" {
+		return t.draw(stub, args)
 	}
 
 	if args[0] == "query_checkif_winner" {
@@ -418,8 +419,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	if args[0] == "check" {
-		// check is another name of determine_winner
-		return t.determine_winner(stub, args)
+		// check is another name of draw
+		return t.draw(stub, args)
 	}
 
     if args[0] == "verify" {
@@ -747,11 +748,12 @@ func (t *SimpleChaincode) query_target_block(stub shim.ChaincodeStubInterface, a
     return shim.Success([]byte(le.FutureBlockHeight))
 }
 
+// draw를 통해서 verifiableRandomkey를 만드는건데, 왜 여기서 verifiableRandomkey를 인수로 받아야 하지?
 // args: (0: function_name, 1: Manifest Hash, 2: verifiableRandomkey)
 // args2 is 128 random bits array, 4 32-bit value concatenated by commna
-func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-    logger.Info("ChainCode: determine_winner invoked")
-    const numOfArgs = 3
+func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+    logger.Info("ChainCode: draw invoked")
+    const numOfArgs = 2
     if len(args) != numOfArgs {
         return shim.Error("Incorrect number of arguments. Expecting 3 including function name, manifest hash, random key");
     }
@@ -779,7 +781,7 @@ func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, arg
     err = json.Unmarshal(jsonbytes, &le)
 
     if err != nil {
-        return shim.Error("Unmarshaling lottery event fails in determine_winner")
+        return shim.Error("Unmarshaling lottery event fails in draw")
     }
 
     // Check if the this operation is already done
@@ -821,7 +823,7 @@ func (t *SimpleChaincode) determine_winner(stub shim.ChaincodeStubInterface, arg
     logger.Info("Winners: %s\n", winner_concat)
 
     // We will check VerifiableRandomkey is consistent when verifying the result
-    le.VerifiableRandomkey = getVerifiableRandomKey(le) + le.GetVerifiableRandomKeyfromLottery();
+    le.VerifiableRandomkey = le.GetVerifiableRandomKeyfromLottery();
     logger.Info("VerifiableRandomkey %s", le.VerifiableRandomkey)
     le.Status = "CHECKED"
 
@@ -872,7 +874,7 @@ func (t *SimpleChaincode) verify_result(stub shim.ChaincodeStubInterface, args [
     err = json.Unmarshal(jsonbytes, &le)
 
     if err != nil {
-        return shim.Error("Unmarshaling lottery event fails in determine_winner")
+        return shim.Error("Unmarshaling lottery event fails in draw")
     }
 
     if le.Status != "CHECKED" {
