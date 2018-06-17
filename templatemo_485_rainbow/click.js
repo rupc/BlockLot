@@ -298,7 +298,7 @@ function clickLotteryNote() {
 var gWinnerList;
 function clickWinnerList() {
     // console.log(gWinnerList);
-    var outputText;
+    var outputText = "";
     var winnerListArray = gWinnerList.split(",").filter(function(x) {
         return (x.length > 0) && (x !== (undefined || null || " " || ' ' || '' || ""));
     });
@@ -450,39 +450,13 @@ function toHexString(byteArray) {
   }).join('')
 }
 
-// randomBits = blockHash
+// return winner list (array of integers)
+// 추첨 행위와 참여자 명단을 분리시킴.
+// 순수히 추첨만 이루어짐. 우승자 수, 참가자 수, 우승자 수
 var doDetermineWinner = function(randomBits, numOfParticipants, numOfWinners) {
-    // code from http://stackoverflow.com/questions/5199901/how-to-sort-an-associative-array-by-its-values-in-javascript
-    var tuples = [];
-    var indexHash = 0;
-    var concatenated = "";
-    for (var i = 0; i < numOfParticipants; i++) {
-        concatenated = randomBits + "" + i;
-        // console.log("concatenated" + i + ": " + concatenated);
-        indexHash = sjcl.hash.sha256.hash(concatenated);
-        indexHash = sjcl.codec.hex.fromBits(indexHash);  
-        // indexHash = concatenated;
-        
-        console.log("hash " + i + ": " + indexHash);
-        tuples.push([i, indexHash]);
-    }
-    console.log(tuples[0]);
-    tuples.sort(function(a, b) {
-        a = a[1];
-        b = b[1];
-        return a < b ? -1 : (a > b ? 1 : 0);
-        // for (var i = 0; i < 16; i++)
-        // {
-            // if (a[i] < b[i])
-                // return -1;
-            // else if (a[i] > b[i])
-                // return 1;
-        // }
+    var winnerList = drawByFisherYatesShuffle(numOfParticipants, numOfWinners, randomBits);
+    // var winnerList = drawByIndexHashing(numOfParticipants, numOfWinners, randomBits);
 
-    });
-    console.log(tuples);
-
-    return tuples;
 }
 
 // blockcypher API call limits
@@ -856,7 +830,7 @@ $(document).ready(function() {
 
                             var allData = {
                                 "eventHash" : eventHash,
-                                "verifiableRandomKey"  :  verifiableRandomKey,
+                                // "verifiableRandomKey"  :  verifiableRandomKey,
                             };
 
                             showSpinner();
@@ -1235,15 +1209,18 @@ $(document).ready(function() {
                                     preConfirm: () => {
                                         // 검증키 사용하여 검증
                                         var lottery = cell.getRow().getData();
-                                        isInfoVrfy = vrfyInfo(lottery);
+                                        var verifyResult = vrfyInfo(lottery);
+                                        isInfoVrfy = verifyResult.successFlag;
                                         finalHtmlOutput += "<div><b>행사 정보 무결성 검증</b></div>";
                                         if (isInfoVrfy) {
                                             console.log("행사 정보 무결성 검증 성공");
-                                            finalHtmlOutput += "<font color='red'>성공</font></div>";
+                                            finalHtmlOutput += "<font color='red'><b>성공</b></font></div>";
                                         } else {
                                             console.log("행사 정보 무결성 검증 실패");
-                                            finalHtmlOutput += "<font color='red'>실패</font></div>";
+                                            finalHtmlOutput += "<font color='red'><b>실패</b></font></div>";
                                         }
+                                        finalHtmlOutput += "<div><b>검증키: " + verifyResult.verifiableRandomKey +"</b></div>";
+                                        finalHtmlOutput += "<div><b>계산 결과: " + verifyResult.calculatedKey +"</b></div>";
                                         finalHtmlOutput += "<br><br>";
                                     },
                                 });
@@ -1251,25 +1228,26 @@ $(document).ready(function() {
 
                             // TODO
                             if (winnerVrfy) {
-                                // vrfyWinner();
                                 verifyProgressStep.push("당첨");
                                 sweetModal.push({
                                     title: '당첨자 명단 검증',
                                     text: textWinnerVrfy,
                                     preConfirm: () => {
                                         // 당첨자 재계산 후 목록 비교
-                                        isWinnerVrfy = vrfyWinner();
-                                        finalHtmlOutput += "<div><b>당첨자 명단 검증</b></div>" +
-                                            "<div>랜덤 소스, 참가자 명단, 우승자 수, 그리고 추첨 스크립트를 사용하여 당첨자를 계산한 결과는 다음과 같습니다. 결과: ";
+                                        var lottery = cell.getRow().getData();
+                                        var verifyResult = vrfyWinner(lottery);
+                                        isWinnerVrfy = verifyResult.successFlag;
+                                        finalHtmlOutput += "<div><b>당첨자 명단 검증</b></div>";
                                         if (isWinnerVrfy) {
                                             console.log("당첨자 명단 검증 성공");
-                                            finalHtmlOutput += "<font color='red'>성공</font></div>";
+                                            finalHtmlOutput += "<font color='red'><b>성공</b></font></div>";
                                         } else {
                                             console.log("당첨자 명단 검증 실패");
-                                            finalHtmlOutput += "<font color='red'>실패</font></div>";
+                                            finalHtmlOutput += "<font color='red'></b>실패</b></font></div>";
                                         }
-                                        finalHtmlOutput += "<div>계산 결과</div>"
-                                        finalHtmlOutput += "<div>당첨자 명단</div>"
+                                        finalHtmlOutput += "<div>랜덤 소스, 참가자 명단, 우승자 수, 그리고 추첨 스크립트(Knuth-Fisher-Yates random shuffling)를 사용하여 당첨자를 계산한 결과는 다음과 같습니다";
+                                        finalHtmlOutput += "<div><b>당첨자 명단: " + verifyResult.winnerListArray + "</b></div>"
+                                        finalHtmlOutput += "<div><b>계산 결과: " + verifyResult.calculatedWinnerList + "</b></div><br>"
                                         finalHtmlOutput += "<br><br>";
                                     },
                                 });
@@ -1294,6 +1272,12 @@ $(document).ready(function() {
                                     title: '응답 값 비교 검증',
                                     // text: textResponseVrfy,
                                     html: textResponseVrfy + outputhtml,
+                                    backdrop: `
+                                        rgba(0,0,123,0.4)
+                                        url("/images/raft_consensus.gif")
+                                        left top
+                                        no-repeat
+                                      `,
                                     preConfirm: () => {
                                         console.log("응답 값 비교 검증");
                                         // console.log("numOfPeers", numOfPeers);
@@ -1317,11 +1301,27 @@ $(document).ready(function() {
                                             data: allData,
                                             async: false,
                                             success: function(responseData) {
+                                                var peerResponse = JSON.parse(responseData).peersResponses;
+                                                var voting = JSON.parse(responseData).voting;
+                                                console.log(peerResponse);
+                                                console.log(voting);
+                                                var successFlag = false;
+                                                for (var i = 0; i < numOfPeers; ++i) {
+                                                    if(voting[peerResponse[selectedPeers[i]]] > (numOfPeers / 2)) {
+                                                        successFlag = true;
+                                                        break;
+                                                    }
+                                                }
 
                                                 var prettyJSON 
-                                                    = "<div><b>응답 값 검증 결과</b></div>" +
-
-                                                    "<div>아래의 결과는 연결된 피어들에 주어진 행사 질의를 한 결과의 해시 값을 나타냅니다. voting 필드는 (응답 값, 득표 수)를 나타내며 득표 수가 높을수록 신뢰할만한 정보입니다. 보통의 분산 시스템에서는 다수결 투표(majority voting)를 통해 응답 값을 선택합니다. peerResponse 필드는 (피어 이름, 응답 값)을 나타내며, 각 피어가 어떤 응답 값을 주었는지를 나타냅니다.</div><br>" + 
+                                                    = "<div><b>응답 값 검증 결과</b></div>";
+                                                if(successFlag) {
+                                                    prettyJSON += "<div><font color='red'><b>성공</b></font></div>"
+                                                } else {
+                                                    prettyJSON += "<div><font color='red'><b>실패</b></font></div>"
+                                                }
+                                                prettyJSON += 
+                                                    "<div>아래의 결과는 연결된 피어들에 주어진 행사 질의를 한 결과의 해시 값을 나타냅니다. voting 필드는 (응답 값, 득표 수)를 나타내며 득표 수가 높을수록 신뢰할만한 정보입니다. 보통 분산 시스템에서는 다수결 투표(majority voting)를 통해 응답 값을 선택합니다. peerResponse 필드는 (피어 이름, 응답 값)을 나타내며, 각 피어가 어떤 응답 값을 주었는지를 나타냅니다.</div><br>" + 
                                                     "<pre style='text-align: left;'>" 
                                                     + responseData + "</pre>"
                                                 finalHtmlOutput += prettyJSON;
@@ -1348,8 +1348,23 @@ $(document).ready(function() {
                                     text: textStatVrfy,
                                     preConfirm: () => {
                                         console.log("통계");
+                                        var dataStatistics = 
+                                            getDataStatistics(randomEngineNoSource, "", sWinners, sParticipants, numOfTrial);
+                                        gStdDev = stdev(dataStatistics);
+                                        console.log("분산:", gStdDev.variance);
+                                        console.log("평균:", gStdDev.mean);
+                                        console.log("표준편차:", gStdDev.deviation);
+                                        // console.log("표준편차:", Math.sqrt(gStdDev.variance));
+                                        for (var i = 0; i < sParticipants; ++i) {
+                                            var z =(dataStatistics[i] / numOfTrial) / (gStdDev.deviation / Math.sqrt(numOfTrial * sParticipants));
+                                            console.log("z", i, " : ", z);
+                                        }
                                         finalHtmlOutput += 
-                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 통계적으로 균일 분포를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
+                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 통계적으로 균일 분포(uniform 를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
+                                            "<div>평균:" + gStdDev.mean         + "</div>" +
+                                            "<div>분산:" + gStdDev.variance     + "</div>" +
+                                            "<div>표준편차:" + gStdDev.deviation    + "</div>" +
+                                            // "<div>표준편차:" + Math.sqrt(gStdDev.variance) + "</div>" +
                                             "<div style='display:block; margin-left:auto; margin-right:auto;width:50%;'class='chart' id='googleChart_div'></div><div id='googleChart'></div>";
                                     },
                                 });
@@ -1371,7 +1386,7 @@ $(document).ready(function() {
                                         confirmButtonText: '확인',
                                         width: 1000,
                                     });
-                                    console.log("뭔가?");
+                                    // console.log("뭔가?");
                                     drawChart();
                                 }
                             })
@@ -1424,7 +1439,7 @@ $(document).ready(function() {
                                             selectedPeers: selectedPeers,
                                         };
                                     },
-                                    allowOutsideClick: () => !swal.isLoading()
+                                    allowOutsideClick: () => !swal.isLoading(),
 
                                 }).then((result) => {
                                     if (result.value) {
@@ -1540,15 +1555,15 @@ $(document).ready(function() {
                             });
 
 
-                            // var tuples = doDetermineWinner(randomKey, numOfParticipants, numOfWinners);
-                            var tuples = doDetermineWinner(blockHash, numOfParticipants, numOfWinners);
+                            // var winnerList = doDetermineWinner(randomKey, numOfParticipants, numOfWinners);
+                            var winnerList = doDetermineWinner(blockHash, numOfParticipants, numOfWinners);
 
                             // Print
                             var firstNchars = 10;
                             // var outputText = "(긴 경우)처음 " + firstNchars + " 글자까지만 표현\n"
                             var outputText = "";
                             for (i = 0; i < numOfWinners; ++i) {
-                                outputText += "<font color='red'>" + (i+1) + "</font> " + participantArray[tuples[i][0]] + "<br>";
+                                outputText += "<font color='red'>" + (i+1) + "</font> " + participantArray[winnerList[i]] + "<br>";
                             }
 
                             swal({
@@ -1690,21 +1705,21 @@ $(document).ready(function() {
 
                                     var numOfParticipants = participantArray.length;
 
-                                    // var tuples = doDetermineWinner(randomKey, numOfParticipants, numOfWinners);
-                                    var tuples = doDetermineWinner(blockHash, numOfParticipants, numOfWinners);
+                                    // var winnerList = doDetermineWinner(randomKey, numOfParticipants, numOfWinners);
+                                    var winnerList = doDetermineWinner(blockHash, numOfParticipants, numOfWinners);
 
                                     // Print
                                     // var outputText = "(긴 경우)처음 " + firstNchars + " 글자까지만 표현\n"
                                     var outputText = "";
                                     // for (i = 0; i < numOfWinners; ++i) {
-                                        // // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + tuples[i][0].substring(0, 10) + "\n\n";
-                                        // // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + tuples[i][0] + "\n\n";
-                                        // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + participantArray[tuples[i][0]] + "\n\n";
+                                        // // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + winnerList[i][0].substring(0, 10) + "\n\n";
+                                        // // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + winnerList[i][0] + "\n\n";
+                                        // outputText += "<font color=\"red\">" + (i+1) + "</font> :" + participantArray[winnerList[i][0]] + "\n\n";
                                     // }
                                     // verifiedNumber = verifiedNumber -1;
-                                    console.log("tuples[verifiedNumber]", tuples[verifiedNumber-1][0]);
+                                    console.log("winnerList[verifiedNumber]", winnerList[verifiedNumber-1][0]);
 
-                                    if (participantArray[tuples[verifiedNumber-1][0]] == verifiedName) {
+                                    if (participantArray[winnerList[verifiedNumber-1]] == verifiedName) {
                                         verification = true;
                                         outputText = "" + verifiedName + "(는)은 " + verifiedNumber + " 순위가 맞습니다";
                                     } else {
@@ -1714,7 +1729,7 @@ $(document).ready(function() {
                                         // verifiedName으로 정확한 순위를 찾아낼수있나?
                                         // 이름은 이미 점검했으므로 반드시 정확한 랭크가 매겨져야함
                                         for (var i = 0; i < participantArray.length; ++i) {
-                                            if (participantArray[tuples[i][0]] == verifiedName) correctRank = i+1;
+                                            if (participantArray[winnerList[i]] == verifiedName) correctRank = i+1;
                                         }
 
                                         if (correctRank > numOfWinners) {
@@ -1785,7 +1800,7 @@ $(document).ready(function() {
                         "<b>마감일</b> : " + cell.getRow().getData().dueDate  + "</br>" + 
                         "<b>발표일</b> : " + cell.getRow().getData().announceDate  + "</br>" + 
                         '<b>참여자</b> : <span style="cursor:pointer;"onclick="clickParticipantinfo()"><i class="fa fa-address-book"; style="font-size:26px;color:Blue"></i></span></br>' +
-                        '<b>우승자</b> : <span style="cursor:pointer;"onclick="clickWinnerList()"><i class="material-icons" style="font-size:26px;color:Blue">people</i> </span></br>' +
+                        '<b>당첨자</b> : <span style="cursor:pointer;"onclick="clickWinnerList()"><i class="material-icons" style="font-size:26px;color:Blue">people</i> </span></br>' +
                         "<b>타겟 블록</b> : <a target='_blank'  href='https://blockchain.info/ko/block-height/" + cell.getRow().getData().targetBlock + "'>" + cell.getRow().getData().targetBlock + "</a></br>" +
                         // "<b>이벤트ID</b>: " + cell.getRow().getData().eventHash + "</br>" +
                         // "<b>랜덤키</b> : " + cell.getRow().getData().randomKey + "</br>"  + 
@@ -1811,11 +1826,11 @@ $(document).ready(function() {
             {title:"우승자", field:"winnerList", align:"center", width:"8px",headerSort:false},
             {title:"참여자", field:"participantList", align:"center", width:"8px",headerSort:false},
             {title:"추첨 노트", field:"lotteryNote", align:"center", width:"8px",headerSort:false},
-            {title:"통계", field:"script",formatter:printStatistics, align:"center", width:"4px",headerSort:false,
-                cellClick:function(e, cell){
-                    document.getElementById('chartbtn').click();
-                }
-            },
+            // {title:"통계", field:"script",formatter:printStatistics, align:"center", width:"4px",headerSort:false,
+                // cellClick:function(e, cell){
+                    // document.getElementById('chartbtn').click();
+                // }
+            // },
         ],
     });
 

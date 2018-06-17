@@ -711,7 +711,8 @@ app.post('/open', function(req, res) {
     var dueDate = req.body.dueDate;
     var lotteryNote = req.body.lotteryNote;
     // Server side
-    const randomKey = crypto.randomBytes(32).toString('hex');
+    // Generate 32 bytes random key
+    const randomKey = (crypto.randomBytes(32)).toString('hex');
     var script = selectScript(req.body.scriptNum);
 
     var concatenated = "" + eventName + numOfWinners + targetBlockNumber + expectedAnnouncementDate + issueDate + dueDate + lotteryNote + script + randomKey;
@@ -784,7 +785,7 @@ app.post('/draw', function(req, res) {
     var allData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
-        "args" : ["determine_winner", eventHash],
+        "args" : ["draw", eventHash],
     };
 
     logger.debug(allData);

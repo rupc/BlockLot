@@ -70,7 +70,34 @@ type lottery_event struct {
 
 func (l lottery_event) GetAllConcats() string {
     var allConCats string = ""
-    allConCats = l.EventName + l.IssueDate + l.Duedate + l.AnnouncementDate + l.NumOfMembers + l.NumOfWinners + l.MemberList + l.RandomKey + l.InputHash + l.FutureBlockHeight + l.WinnerList + l.Script + l.LotteryNote + l.DrawTxID + l.ChannelID
+    allConCats = l.EventName +
+                // + l.IssueDate
+                // + l.Duedate
+                // + l.AnnouncementDate
+                l.NumOfMembers +
+                l.NumOfWinners +
+                l.MemberList +
+                l.RandomKey +
+                l.InputHash +
+                l.FutureBlockHeight +
+                l.WinnerList +
+                l.Script +
+                l.LotteryNote +
+                l.DrawTxID +
+                l.ChannelID
+    logger.Debug("eventName", l.EventName)
+    logger.Debug("NumOfMembers", l.NumOfMembers)
+    logger.Debug("NumOfWinners", l.NumOfWinners)
+    logger.Debug("MemberList", l.MemberList)
+    logger.Debug("RandomKey", l.RandomKey)
+    logger.Debug("InputHash", l.InputHash)
+    logger.Debug("targetBlock", l.FutureBlockHeight)
+    logger.Debug("winnerList", l.WinnerList)
+    logger.Debug("script", l.Script)
+    logger.Debug("lotteryNote", l.LotteryNote)
+    logger.Debug("drawTxID", l.DrawTxID)
+    logger.Debug("channelID", l.ChannelID)
+
     return allConCats
 }
 
@@ -247,11 +274,11 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
                     6116C93BF51548A6E31EAC22088302B789714FE03DC5EC378BCB02479D637C4E`,
         WinnerList: "UNDEFINED",
         Script: `
-        func do_determine_winner(le lottery_event) []int {
+        func DoDetermineWinner(le lottery_event) []int {
             var im InputManifest = convert_lottery_to_im(le)
             print_im(im)
             var block Block
-            var winner_list []int
+            var winnerList []int
             var block_hash string
 
             if le.FutureBlockHeight == "UNDEFINED" {
@@ -317,10 +344,10 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
             print winners
             for i := 0; i < num_winners; i++ {
                 logger.Info("%dth: %s\n", hack[hackkeys[i]], hackkeys[i])
-                winner_list = append(winner_list, hack[hackkeys[i]])
+                winnerList = append(winnerList, hack[hackkeys[i]])
             }
 
-            return winner_list
+            return winnerList
         }`,
         OpenTxID: openTxID,
         ChannelID: chanID,
@@ -755,19 +782,18 @@ func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) 
     logger.Info("ChainCode: draw invoked")
     const numOfArgs = 2
     if len(args) != numOfArgs {
-        return shim.Error("Incorrect number of arguments. Expecting 3 including function name, manifest hash, random key");
+        return shim.Error("Incorrect number of arguments. Expecting 2 including function name, manifest hash");
     }
 
     logger.Info("args[0]: " + args[0])
     logger.Info("args[1]: " + args[1])
-    logger.Info("args[2]: " + args[2])
 
     // Currently, search key is the event name for easy development NO!
     // Search key is manifest hash, not event name
-    var search_key string = args[1]
+    var eventHash string = args[1]
     // var vkey string = args[2]
 
-    jsonbytes, err := stub.GetState(search_key)
+    jsonbytes, err := stub.GetState(eventHash)
     if jsonbytes == nil {
         return shim.Error("No event has that name: " + args[1]);
     }
@@ -791,60 +817,55 @@ func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) 
     }
 
     // Get the actual winner list
-    winner_list, winner_listNames, nonce := do_determine_winner(le)
-    encryptedMemberList := strings.Split(le.MemberList, ",")
-    logger.Info("winner_list: %s\n", winner_list)
-    logger.Info("winner_listNames: %s\n", winner_listNames)
-    logger.Info("encryptedMemberList: %s\n", encryptedMemberList)
-    logger.Info("nonce: %s\n", nonce)
+    // winnerList, winnerListNames := DoDetermineWinner(le)
+    winnerIndexes := DoDetermineWinner(le)
+    participantArray := strings.Split(le.MemberList, ",")
+    // winnerArray
 
-    var winner_list_names []string
+    // logger.Info("winnerList: %s\n", winnerList)
+    // logger.Info("winnerListNames: %s\n", winnerListNames)
+    logger.Info("participantArray: ", participantArray)
 
-    for i := 0; i < len(winner_list); i++ {
-        winner_list_names = append(winner_list_names, encryptedMemberList[winner_list[i]])
+    var winnerList_names []string
+
+    for i := 0; i < len(winnerIndexes); i++ {
+        winnerList_names = append(winnerList_names, participantArray[winnerIndexes[i]])
     }
 
-    var winner_concat string
-    winner_concat = strings.Join(winner_list_names[:],",")
+    var winnerConcat string
+    winnerConcat = strings.Join(winnerList_names[:],",")
 
-    // Not necessary condition lol
-    /* if le.WinnerList != "UNDEFINED" {
-        logger.Info("Check operation is the first time!\n")
-    } */
+    // logger.Info("Before asigning WinnerList%v\n", le)
+    le.WinnerList = winnerConcat
+    logger.Info("WinnerList ", winnerConcat)
 
-    if le.Status == "CHECKED" {
-        logger.Info("Check operation is not the first time!\n")
-    }
-
-    logger.Info("Before asigning WinnerList%v\n", le)
-    le.WinnerList = winner_concat
-    logger.Info("After asigning WinnerList%v\n", le)
-
-    /* logger.Info("Winners: %s\n", winner_concat) */
-    logger.Info("Winners: %s\n", winner_concat)
-
-    // We will check VerifiableRandomkey is consistent when verifying the result
-    le.VerifiableRandomkey = le.GetVerifiableRandomKeyfromLottery();
-    logger.Info("VerifiableRandomkey %s", le.VerifiableRandomkey)
-    le.Status = "CHECKED"
-
+    /* logger.Info("Winners: %s\n", winnerConcat) */
+    // logger.Info("Winners: %s\n", winnerConcat)
     // Get draw txid
     drawTxID := stub.GetTxID()
     le.DrawTxID = drawTxID
 
+    le.Status = "CHECKED"
+
+    // We will check VerifiableRandomkey is consistent when verifying the result
+    le.VerifiableRandomkey = le.GetVerifiableRandomKeyfromLottery();
+    logger.Info("VerifiableRandomkey: ", le.VerifiableRandomkey)
+
     jsonBytes, err := json.Marshal(le)
+
     if err != nil {
         return shim.Error("lottery event Marshaling fails")
     }
 
     err = stub.PutState(le.InputHash, jsonBytes);
-    // err = stub.PutState(le.EventName, jsonBytes);
-    // err = stub.PutState(le.search_key, jsonBytes);
+
     if err != nil {
         return shim.Error(err.Error())
     }
 
-    return shim.Success([]byte(winner_concat))
+    logger.Info("Successfully returned winnerList")
+
+    return shim.Success([]byte(winnerConcat))
 }
 
 func (t *SimpleChaincode) verify_result(stub shim.ChaincodeStubInterface, args []string) pb.Response {

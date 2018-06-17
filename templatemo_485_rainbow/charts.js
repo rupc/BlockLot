@@ -51,11 +51,19 @@ function getDataStatistics(randomEngine, randomSource, numOfWinners, numOfPartic
             arr[winners[j]]++;
         }
     }
+
+    // calculate average
+    // calculate stddev
     return arr;
 }
 
+var gStdDev;
+
 function drawChart() {
     var dataStatistics = getDataStatistics(randomEngineNoSource, "", sWinners, sParticipants, numOfTrial);
+    gStdDev = stdev(dataStatistics);
+    console.log("표준편차:", gStdDev);
+
     var ndata = [['Name', '당첨 횟수', {role: 'style'}]];
 
     for (var i = 0; i < dataStatistics.length; ++i) {
@@ -127,4 +135,35 @@ function drawChart() {
     }
 }
 
+var stdev = function(arr) {
+    var n = arr.length;
+    var sum = 0;
 
+    arr.map(function(data) {
+        sum+=data;
+    });
+
+    var mean = sum / n;
+
+    var variance = 0.0;
+    var v1 = 0.0;
+    var v2 = 0.0;
+
+    if (n != 1) {
+        for (var i = 0; i<n; i++) {
+            v1 = v1 + (arr[i] - mean) * (arr[i] - mean);
+            v2 = v2 + (arr[i] - mean);
+        }
+
+        v2 = v2 * v2 / n;
+        variance = (v1 - v2) / (n-1);
+        if (variance < 0) { variance = 0; }
+        stddev = Math.sqrt(variance);
+    }
+
+    return {
+        mean: Math.round(mean*100)/100,
+        variance: variance,
+        deviation: Math.round(stddev*100)/100
+    };
+};
