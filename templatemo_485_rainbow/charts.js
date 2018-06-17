@@ -95,10 +95,19 @@ function drawChart() {
         },
         height: '300',
         legend: 'none',
-        width: '550',
+        width: '590',
     };
 
-    var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+    var chart_div = document.getElementById('googleChart_div');
+    // var chart_div = document.getElementById('chart_div');
+    var chart = new google.visualization.ColumnChart(chart_div);
+
+    // google.visualization.events.addListener(chart, 'ready', function () {
+        // chart_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
+        // console.log(chart_div.innerHTML);
+    // });
+
+    // chart.draw(data, options);
 
     // Get chart image rather than raw html...
     if (navigator.userAgent.match(/Trident\/7\./)) {

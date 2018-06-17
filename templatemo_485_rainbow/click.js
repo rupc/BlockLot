@@ -1181,6 +1181,7 @@ $(document).ready(function() {
 
                             var verifyProgressStep = [];
                             var sweetModal = [];
+                            var finalHtmlOutput = "";
 
                             console.log(randomSourceVrfy, infoVrfy, 
                                 winnerVrfy, responseVrfy, statVrfy);
@@ -1257,15 +1258,57 @@ $(document).ready(function() {
 
                             // TODO
                             if (responseVrfy) {
-                                // var eventHash = cell.getRow().getData().eventHash;
-                                // vrfyResponse(eventHash);
                                 verifyProgressStep.push("응답");
+                                var eventHash = cell.getRow().getData().eventHash;
+                                var queryResult = queryPeersForVrfy();
+
+                                var outputhtml = "";
+                                var numOfPeers;
+                                var peers;
+
+                                outputhtml += queryResult.outputhtml;
+                                numOfPeers = queryResult.numOfPeers;
+                                peers = queryResult.peers;
+
+
                                 sweetModal.push({
                                     title: '응답 값 비교 검증',
-                                    text: textResponseVrfy,
+                                    // text: textResponseVrfy,
+                                    html: textResponseVrfy + outputhtml,
                                     preConfirm: () => {
                                         console.log("응답 값 비교 검증");
-                                        // "vrfyResponse" : vrfyResponse,
+                                        // console.log("numOfPeers", numOfPeers);
+                                        var selectedPeers = [];
+                                        for(var i = 0; i < numOfPeers; ++i) {
+                                            var checked = document.getElementById(peers[i]).getAttribute("checked");
+                                            console.log("Selected?: ", checked);
+                                            if (checked) {
+                                                selectedPeers.push(peers[i]);
+                                                console.log("SelectedPeer: ", peers[i]);
+                                            }
+                                        }
+                                        var allData = {
+                                            "eventHash" : eventHash,
+                                            "selectedPeers" : selectedPeers,
+                                        };
+
+                                        $.ajax({
+                                            url: hostURL + "/verify-peer-response",
+                                            type: "POST", 
+                                            data: allData,
+                                            async: false,
+                                            success: function(responseData) {
+
+                                                var prettyJSON 
+                                                    = "<div><b>응답 값 검증 결과</b></div><pre style='text-align: left;'>" 
+                                                        + responseData + "</pre>"
+                                                finalHtmlOutput += prettyJSON;
+                                            },
+                                            error: function() {
+                                                Swal("Fail");
+                                            }
+                                            // width:1200,
+                                        });
                                     },
                                 });
                             }
@@ -1276,11 +1319,14 @@ $(document).ready(function() {
                                 // swal.closeModal()
                                 // document.getElementById('chartbtn').click();
                                 verifyProgressStep.push("통계");
+
                                 sweetModal.push({
                                     title: '추첨 스크립트의 통계적 검증',
                                     text: textStatVrfy,
                                     preConfirm: () => {
                                         console.log("통계");
+                                        finalHtmlOutput += 
+                                            "<div style='display:block; margin-left:auto; margin-right:auto;width:50%;'class='chart' id='googleChart_div'></div><div id='googleChart'></div>";
                                     },
                                 });
                             }
@@ -1290,18 +1336,19 @@ $(document).ready(function() {
                                 confirmButtonText: '다음',
                                 cancelButtonText: '취소',
                                 showCancelButton: true,
+                                width: 600,
                                 progressSteps: verifyProgressStep,
                             }).queue(sweetModal)
                                 .then((result) => {
                                 if (result.value) {
                                     swal({
                                         title: '검증 결과',
-                                        html:
-                                        'Your answers: <pre>' +
-                                        JSON.stringify(result.value) +
-                                        '</pre>',
-                                        confirmButtonText: '확인'
-                                    })
+                                        html: finalHtmlOutput,
+                                        confirmButtonText: '확인',
+                                        width: 1000,
+                                    });
+                                    console.log("뭔가?");
+                                    drawChart();
                                 }
                             })
                         }
@@ -1310,10 +1357,10 @@ $(document).ready(function() {
                     // return;
 
                     var vrfyResponse = function(eventHash) {
-
                         $.ajax({
                             url: hostURL + "/query-peers",
                             type: "GET", 
+                            async: false,
                             success: function(responseData) {
                                 console.log(responseData);
                                 // var prettyJSON = "<pre style='text-align: left;'>" + responseData + "</pre>"
@@ -1327,7 +1374,8 @@ $(document).ready(function() {
                                 var numOfPeers = peers.length;
                                 var outputhtml = "";
                                 for(var i = 0; i < peers.length; ++i) {
-                                    outputhtml += "<div><input checked='checked' type='checkbox' id='" + peers[i] + "'>" +
+                                    outputhtml 
+                                        += "<div><input checked='checked' type='checkbox' id='" + peers[i] + "'>" +
                                         "<label for=" + peers[i] + ">&nbsp;" + peers[i] + "</label></div>";
                                 }
                                 swal({
@@ -1366,6 +1414,7 @@ $(document).ready(function() {
                                             url: hostURL + "/verify-peer-response",
                                             type: "POST", 
                                             data: allData,
+                                            async: false,
                                             success: function(responseData) {
                                                 var prettyJSON 
                                                     = "<pre style='text-align: left;'>" 
