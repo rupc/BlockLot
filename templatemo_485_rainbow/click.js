@@ -1200,12 +1200,21 @@ $(document).ready(function() {
                                     no-repeat
                                   `,
                                     preConfirm: () => {
-                                        isRandomSourceVrfy = vrfyRandomSource(targetBlock, 1);
-                                        if (isRandomSourceVrfy) {
+                                        var verifyResult = vrfyRandomSource(targetBlock, 1);
+                                        isRandomSourceVrfy = verifyResult.successFlag;
+
+                                        finalHtmlOutput += "<div><b>랜덤 소스 무결성 검증</b></div>";
+                                        if (isRandomSourceVrfy == true) {
+                                            finalHtmlOutput += "<b><font color='red'>성공</font></b></div>";
                                             console.log("랜덤 소스 무결성 검증 성공!");
                                         } else {
+                                            finalHtmlOutput += "<font color='red'>실패</font></div>";
                                             console.log("랜덤 소스 무결성 검증 실패!");
                                         }
+                                        // finalHtmlOutput += "<div></div>";
+                                        finalHtmlOutput += "<br>";
+                                        finalHtmlOutput += verifyResult.outputhtml;
+                                        finalHtmlOutput += "<br><br>";
                                     },
                                 });
                             }
@@ -1227,11 +1236,15 @@ $(document).ready(function() {
                                         // 검증키 사용하여 검증
                                         var lottery = cell.getRow().getData();
                                         isInfoVrfy = vrfyInfo(lottery);
+                                        finalHtmlOutput += "<div><b>행사 정보 무결성 검증</b></div>";
                                         if (isInfoVrfy) {
                                             console.log("행사 정보 무결성 검증 성공");
+                                            finalHtmlOutput += "<font color='red'>성공</font></div>";
                                         } else {
                                             console.log("행사 정보 무결성 검증 실패");
+                                            finalHtmlOutput += "<font color='red'>실패</font></div>";
                                         }
+                                        finalHtmlOutput += "<br><br>";
                                     },
                                 });
                             }
@@ -1246,12 +1259,18 @@ $(document).ready(function() {
                                     preConfirm: () => {
                                         // 당첨자 재계산 후 목록 비교
                                         isWinnerVrfy = vrfyWinner();
+                                        finalHtmlOutput += "<div><b>당첨자 명단 검증</b></div>" +
+                                            "<div>랜덤 소스, 참가자 명단, 우승자 수, 그리고 추첨 스크립트를 사용하여 당첨자를 계산한 결과는 다음과 같습니다. 결과: ";
                                         if (isWinnerVrfy) {
                                             console.log("당첨자 명단 검증 성공");
+                                            finalHtmlOutput += "<font color='red'>성공</font></div>";
                                         } else {
                                             console.log("당첨자 명단 검증 실패");
+                                            finalHtmlOutput += "<font color='red'>실패</font></div>";
                                         }
-                                        console.log("당첨자 목록 검증");
+                                        finalHtmlOutput += "<div>계산 결과</div>"
+                                        finalHtmlOutput += "<div>당첨자 명단</div>"
+                                        finalHtmlOutput += "<br><br>";
                                     },
                                 });
                             }
@@ -1300,9 +1319,13 @@ $(document).ready(function() {
                                             success: function(responseData) {
 
                                                 var prettyJSON 
-                                                    = "<div><b>응답 값 검증 결과</b></div><pre style='text-align: left;'>" 
-                                                        + responseData + "</pre>"
+                                                    = "<div><b>응답 값 검증 결과</b></div>" +
+
+                                                    "<div>아래의 결과는 연결된 피어들에 주어진 행사 질의를 한 결과의 해시 값을 나타냅니다. voting 필드는 (응답 값, 득표 수)를 나타내며 득표 수가 높을수록 신뢰할만한 정보입니다. 보통의 분산 시스템에서는 다수결 투표(majority voting)를 통해 응답 값을 선택합니다. peerResponse 필드는 (피어 이름, 응답 값)을 나타내며, 각 피어가 어떤 응답 값을 주었는지를 나타냅니다.</div><br>" + 
+                                                    "<pre style='text-align: left;'>" 
+                                                    + responseData + "</pre>"
                                                 finalHtmlOutput += prettyJSON;
+                                                finalHtmlOutput += "<br><br>";
                                             },
                                             error: function() {
                                                 Swal("Fail");
@@ -1326,6 +1349,7 @@ $(document).ready(function() {
                                     preConfirm: () => {
                                         console.log("통계");
                                         finalHtmlOutput += 
+                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 통계적으로 균일 분포를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
                                             "<div style='display:block; margin-left:auto; margin-right:auto;width:50%;'class='chart' id='googleChart_div'></div><div id='googleChart'></div>";
                                     },
                                 });
