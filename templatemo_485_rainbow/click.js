@@ -1355,15 +1355,20 @@ $(document).ready(function() {
                                         console.log("평균:", gStdDev.mean);
                                         console.log("표준편차:", gStdDev.deviation);
                                         // console.log("표준편차:", Math.sqrt(gStdDev.variance));
+                                        var zScores = [];
                                         for (var i = 0; i < sParticipants; ++i) {
-                                            var z =(dataStatistics[i] / numOfTrial) / (gStdDev.deviation / Math.sqrt(numOfTrial * sParticipants));
+                                            console.log("data", dataStatistics[i]);
+                                            var z = Math.abs(dataStatistics[i] - gStdDev.mean) / gStdDev.deviation;
+                                            zScores.push(z);
                                             console.log("z", i, " : ", z);
                                         }
+
                                         finalHtmlOutput += 
-                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 통계적으로 균일 분포(uniform 를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
+                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 통계적으로 균일 분포(uniform distribution)를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
                                             "<div>평균:" + gStdDev.mean         + "</div>" +
                                             "<div>분산:" + gStdDev.variance     + "</div>" +
                                             "<div>표준편차:" + gStdDev.deviation    + "</div>" +
+                                            // "<div>참여자 별 z-score : [" + zScores + "]</div>" +
                                             // "<div>표준편차:" + Math.sqrt(gStdDev.variance) + "</div>" +
                                             "<div style='display:block; margin-left:auto; margin-right:auto;width:50%;'class='chart' id='googleChart_div'></div><div id='googleChart'></div>";
                                     },
