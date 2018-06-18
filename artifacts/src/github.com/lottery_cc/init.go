@@ -68,7 +68,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleRegistered := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b794860dc84148f44d479fd7c634eaf8e3396e723d5d2224c98f38f5d1",
-        EventName: "샘플 추첨-100",
+        EventName: "(시연)샘플 추첨-100",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
@@ -91,7 +91,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleRegistered2 := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b7932111113148f44d479fd7c634eaf8e3396e723d5d2224c98f38f5d1",
-        EventName: "샘플 추첨-200",
+        EventName: "(시연)샘플 추첨-200",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
@@ -114,7 +114,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleRegistered3 := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b7948603c1312lf44d479fd7c634eaf8e3r96e723d5d2224c9222222d1",
-        EventName: "샘플 추첨-400",
+        EventName: "(시연)샘플 추첨-400",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
@@ -138,7 +138,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
     sampleRegistered4 := lottery_event {
         Status: "REGISTERED",
         InputHash: "6b60d2b794832322312lf44d479fd7c634eaf8e3r96e723d5d2224c9222222d1",
-        EventName: "샘플 추첨-800",
+        EventName: "(시연)샘플 추첨-800",
         IssueDate: "1495701618",
         Duedate: "1524808800",
         AnnouncementDate: "1524808800",
@@ -180,6 +180,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         SubscribeTxIDs : openTxID,
         OpenClientIdentity: openClientIdentity,
     }
+
     sampleCheck := lottery_event {
         Status: "ANNOUNCED",
         InputHash: "e284211d3c91622692531bfd860a438d21ee6a04a2f941c970d30b5bab214a30",
@@ -224,7 +225,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         return shim.Error("lottery event Marshaling fails")
     }
 
-    const kNumOfSamples = 6
+    const kNumOfSamples = 0
     var samples [kNumOfSamples] lottery_event
     for i := 0; i < kNumOfSamples; i++ {
         randomInputHash := generateRandomInputHash()
@@ -236,10 +237,10 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         samples[i] = lottery_event {
             Status: "REGISTERED",
             InputHash: randomInputHash,
-            EventName: "테스트 랜덤 추첨 샘플 " + strconv.Itoa(i+1),
+            EventName: "테스트 샘플 " + strconv.Itoa(i+1),
             IssueDate: "1508601618",
-            Duedate: "1500403200",
-            AnnouncementDate: "1500403200",
+            Duedate: "1530403200",
+            AnnouncementDate: "1530403200",
             FutureBlockHeight: randomTargetBlock,
             NumOfMembers: randomNumOfMembers,
             NumOfWinners: randomNumOfWinners,
