@@ -1389,7 +1389,7 @@ $(document).ready(function() {
                                             // var z = Math.abs(dataStatistics[i] - m) / s;
                                             var z = jStat.zscore(dataStatistics[i], m, s);
                                             var ztest = jStat.ztest(dataStatistics[i], m, s, 2);
-                                            zScores.push(z);
+                                            zScores.push(z.toFixed(4));
 
                                             console.log("평균보다 " + (dataStatistics[i] - m) + "만큼 더/덜 당첨");
                                             // console.log("(m0-m)/s=z", dataStatistics[i] - m, z);
@@ -1405,6 +1405,7 @@ $(document).ready(function() {
                                             }
                                         }
 
+                                        finalHtmlOutput += "<div><b>추첨스크립트의 통계적 검증</b></div>"
                                         if (successFlag) {
                                             finalHtmlOutput += "<div><font color='red'><b>성공</b></font></div>"
                                         } else {
@@ -1412,7 +1413,7 @@ $(document).ready(function() {
                                         }
 
                                         finalHtmlOutput += 
-                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 특정 참여자를 유독 많이 당첨시키는지를 검사합니다. 추첨 사건 일어난 횟수 n, 각 참여자가 당첨될 확률 p일때, 추첨 스크립트는 이항 분포를 따릅니다. 통계학에서의 중심 극한 정리(central limit theorem)에 따르면, n이 충분히 크면 모든 확률 분포는 정규 분포를 따릅니다. 따라서 z값 검정 (z-test) 과정을 통해 특정 참여자가 평균보다 얼만큼(k) 더 당첨이 되었는지를 계산하고, 이를 통해 추첨 스크립트의 공평성을 측정합니다. k값은 평균으로부터의 차이의 허용 범위를 나타냅니다. k값이 클수록 z값도 높아집니다. z값이 사전에 정해놓은 최대 수치보다 크면 검증 실패, 작으면 검증 성공으로 구분합니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨될 확률(p)가 주어졌을때의 시행 결과를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
+                                            "<br>행사에 사용된 추첨 스크립트가 특정 참여자를 유독 많이 당첨시키는지를 검사합니다. 추첨 사건 일어난 횟수 n, 각 참여자가 당첨될 확률 p일때, 추첨 스크립트는 이항 분포를 따릅니다. 통계학에서의 중심 극한 정리(central limit theorem)에 따르면, n이 충분히 크면 모든 확률 분포는 정규 분포를 따릅니다. 따라서 z값 검정 (z-test) 과정을 통해 특정 참여자가 평균보다 얼만큼(k) 더 당첨이 되었는지를 계산하고, 이를 통해 추첨 스크립트의 공평성을 측정합니다. k값은 평균으로부터의 차이의 허용 범위를 나타냅니다. k값이 클수록 z값도 높아집니다. z값이 사전에 정해놓은 최대 수치보다 크면 검증 실패, 작으면 검증 성공으로 구분합니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨될 확률(p)가 주어졌을때의 시행 결과를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
                                             // "<b>" +
                                             "<div>시행 횟수(n) = " + n + "</div>" +
                                             "<div>우승자 수(w) = " + w + "</div>" +
@@ -1420,12 +1421,12 @@ $(document).ready(function() {
                                             "<div>당첨 확률(p=w/N) = " + p + "</div>" +
                                             "<div>기댓값(m=np) = " + m + "</div>" +
                                             "<div>분산(v=np(1-p)) = " + v + "</div>" +
-                                            "<div>표준편차(s=np(1-p)) = " + s + "</div>" +
+                                            "<div>표준편차(s=sqrt(np(1-p))) = " + s + "</div>" +
+                                            "<div>참여자 별 z-score : [" + zScores + "]</div>" +
                                             "<div>zMax = " + ztestMax + "</div>" +
-                                            // "</b>" +
-                                            // "<div>참여자 별 z-score : [" + zScores + "]</div>" +
-                                            // "<div>표준편차:" + Math.sqrt(gStdDev.variance) + "</div>" +
                                             "<div style='display:block; margin-left:auto; margin-right:auto;width:50%;'class='chart' id='googleChart_div'></div><div id='googleChart'></div>";
+                                            // "</b>" +
+                                            // "<div>표준편차:" + Math.sqrt(gStdDev.variance) + "</div>" +
                                     },
                                 });
                             }
@@ -1443,11 +1444,36 @@ $(document).ready(function() {
                                     swal({
                                         title: '검증 결과',
                                         html: finalHtmlOutput,
-                                        confirmButtonText: '확인',
+                                        confirmButtonText: '검증 리포트 다운로드',
+                                        cancelButtonText: '확인',
                                         width: 1000,
+                                        preConfirm: () => {
+                                            console.log("검증 리포트 다운로드");
+                                            var allData = {
+                                                outputhtml : finalHtmlOutput,
+                                                reportID : new Date() + "",
+                                            };
+                                            $.ajax({
+                                                url: hostURL + '/create-verification-report',
+                                                type: 'POST',
+                                                data: allData,
+                                                // async: false,
+                                                success: function (filePath) {
+                                                    // success callback
+                                                    console.log("filePath", filePath);
+                                                    var link=document.createElement('a');
+                                                    link.href= hostURL + filePath;
+                                                    link.target="_blank";
+                                                    link.download="veri-report" + new Date() + ".pdf";
+                                                    link.click();
+                                                },
+                                                error: function (jqXHR, textStatus, errorThrown) {
+                                                    // error callback
+                                                    console.log("error");
+                                                }
+                                            });
+                                        },
                                     });
-                                    // console.log("뭔가?");
-                                    drawChart();
                                 }
                             })
                         }

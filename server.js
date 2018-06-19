@@ -14,6 +14,8 @@ var sjcl = require('sjcl');
 var stringify = require("json-stringify-pretty-compact");
 var waitUntil = require('wait-until');
 var nodemailer = require('nodemailer');
+var pdf = require('html-pdf');
+
 const execSync = require('child_process').execSync;
 const syncClient = require('sync-rest-client');
 
@@ -136,6 +138,7 @@ app.use("/sjcl.js", express.static(__dirname + "/lib/sjcl.js"));
 app.use("/swal-forms.js", express.static(__dirname + "/lib/swal-forms.js"));
 app.use("/swal-forms.css", express.static(__dirname + "/lib/swal-forms.css"));
 app.use("/images", express.static(__dirname + "/images"));
+app.use("/report", express.static(__dirname + "/report"));
 
 app.get('/', function(req, res){
     response_client_html(res, "templatemo_485_rainbow/index.html");
@@ -450,6 +453,23 @@ app.post('/query-by-chaincodes', function(req, res) {
         });
     });
 
+});
+
+app.post('/create-verification-report', function(req, res) {
+    logger.info("create-verification-report");
+
+    var outputhtml = req.body.outputhtml;
+    var reportID = req.body.reportID;
+    var options = { format: 'Letter' };
+    var pdfPath = "/report/" + "veri-report" + (new Date().toString()) + ".pdf";
+    var pdfPathFull = __dirname + pdfPath;
+
+    pdf.create(outputhtml, options).toFile(pdfPathFull, function(err, pdfRes) {
+        if (err) return console.log(err);
+        logger.info(pdfPath);
+        res.write(pdfPath);
+        res.end();
+    });
 });
 
 app.post('/query-by-block-by-number', function(req, res) {
