@@ -4,7 +4,7 @@ import (
     "fmt"
     "encoding/json"
     "github.com/hyperledger/fabric/core/chaincode/shim"
-    "math"
+    // "math"
     "math/rand"
     "crypto/sha256"
     "strconv"
@@ -225,36 +225,56 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         return shim.Error("lottery event Marshaling fails")
     }
 
-    const kNumOfSamples = 0
+    const kNumOfSamples = 8
     var samples [kNumOfSamples] lottery_event
     for i := 0; i < kNumOfSamples; i++ {
         randomInputHash := generateRandomInputHash()
-        randomRandomKey := generateRandomRandomKey()
-        randomNumOfMembers := strconv.FormatUint(uint64(rand.Uint32() % 10000 + 10), 10)
-        randomNumOfWinners := strconv.FormatUint(uint64((math.Ceil((float64(rand.Uint32() % 10000 + 10)) * 0.1))), 10)
+        // randomRandomKey := generateRandomRandomKey()
+        // randomNumOfMembers := strconv.FormatUint(uint64(rand.Uint32() % 10000 + 10), 10)
+        // randomNumOfWinners := strconv.FormatUint(uint64((math.Ceil((float64(rand.Uint32() % 10000 + 10)) * 0.1))), 10)
         randomTargetBlock := strconv.FormatUint(uint64(rand.Uint32() % 528000 + 1), 10)
 
         samples[i] = lottery_event {
             Status: "REGISTERED",
             InputHash: randomInputHash,
-            EventName: "테스트 샘플 " + strconv.Itoa(i+1),
-            IssueDate: "1508601618",
-            Duedate: "1530403200",
-            AnnouncementDate: "1530403200",
+            EventName: "예비용 샘플 추첨-" + strconv.Itoa(i+1),
+            IssueDate: "1495701618",
+            Duedate: "1524808800",
+            AnnouncementDate: "1524808800",
             FutureBlockHeight: randomTargetBlock,
-            NumOfMembers: randomNumOfMembers,
-            NumOfWinners: randomNumOfWinners,
-            NumOfRegistered: "0",
-            RandomKey: randomRandomKey,
+            NumOfMembers: "100",
+            NumOfWinners: "10",
+            NumOfRegistered: "100",
+            RandomKey: "241218793433130254621482405472826812551",
             VerifiableRandomkey: "UNDEFINED" ,
-            MemberList: "",
+            MemberList:  fakeNames100,
             WinnerList: "UNDEFINED",
             Script: fisheryatesshuffleScript,
-            LotteryNote: "경품 목록",
+            LotteryNote: "(1~5등):커피, (6~10등):물",
             OpenTxID: openTxID,
             ChannelID: chanID,
             SubscribeTxIDs : openTxID,
             OpenClientIdentity: openClientIdentity,
+            // Status: "REGISTERED",
+            // InputHash: randomInputHash,
+            // EventName: "테스트 샘플 " + strconv.Itoa(i+1),
+            // IssueDate: "1508601618",
+            // Duedate: "1530403200",
+            // AnnouncementDate: "1530403200",
+            // FutureBlockHeight: randomTargetBlock,
+            // NumOfMembers: randomNumOfMembers,
+            // NumOfWinners: randomNumOfWinners,
+            // NumOfRegistered: "0",
+            // RandomKey: randomRandomKey,
+            // VerifiableRandomkey: "UNDEFINED" ,
+            // MemberList: "",
+            // WinnerList: "UNDEFINED",
+            // Script: fisheryatesshuffleScript,
+            // LotteryNote: "경품 목록",
+            // OpenTxID: openTxID,
+            // ChannelID: chanID,
+            // SubscribeTxIDs : openTxID,
+            // OpenClientIdentity: openClientIdentity,
         }
 
         jsonBytes, err = json.Marshal(samples[i])
