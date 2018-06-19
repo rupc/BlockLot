@@ -81,7 +81,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
         MemberList:  fakeNames100,
         WinnerList: "UNDEFINED",
         Script: fisheryatesshuffleScript,
-        LotteryNote: "미국인 이름 100명 추첨 테스트",
+        LotteryNote: "(1~5등):커피, (6~10등):물",
         OpenTxID: openTxID,
         ChannelID: chanID,
         SubscribeTxIDs : openTxID,

@@ -1,7 +1,8 @@
 var sParticipants = 10;
 var sWinners = 2;
-var numOfTrial = 1000000;
+var numOfTrial = 10000000;
 var divideFactor = 4;
+var ztestMax = 2.6;
 
 // Random color picker
 // https://stackoverflow.com/questions/1484506/random-color-generator
@@ -74,11 +75,11 @@ function drawChart() {
     var data = google.visualization.arrayToDataTable(ndata);
 
     var options = {
-        title: "n=" + numOfTrial + ", w/p=" + sWinners + "/" + sParticipants, 
+        title: "n=" + numOfTrial + ", p=" + (sWinners / sParticipants),
 
         titleTextStyle: {
             bold:true,
-            fontSize:26,
+            fontSize:22,
         },
         hAxis: {
             format:'#,###',

@@ -1,6 +1,6 @@
 var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
-// var hostURL = "http://192.168.0.12:1185";
-var hostURL = "http://141.223.121.56:1185";
+var hostURL = "http://192.168.0.12:1185";
+// var hostURL = "http://141.223.121.56:1185";
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 // Lottery structure. got this when clicking the row
 var gLottery;
@@ -600,14 +600,16 @@ $(document).ready(function() {
 
 
     $("#allQueryTableReserved").tabulator({
-        layout:"fitColumns",
+        // layout:"fitColumns",
+        // width: "1900px",
+        layout:"fitDataFill",
         // layout:"fitWidth",
         // tooltips:true,
         addRowPos:"top",
         //                history:true,
         //                pagination:"local",
         //                paginationSize:7,
-        //               movableColumns:true,
+        movableColumns:true,
         resizableRows:true,
         // responsiveLayout:"collapse", 
         initialSort:[
@@ -769,7 +771,7 @@ $(document).ready(function() {
                         type: 'question',
                         input: 'text',
                         showCancelButton: true,
-                        confirmButtonText: '확인',
+                        confirmButtonText: '추첨',
                         cancelButtonText: '취소',
                         allowOutsideClick: () => !swal.isLoading()
                     }, function (inputValue) {
@@ -1096,6 +1098,12 @@ $(document).ready(function() {
                         return;
                     } 
 
+                    var status = cell.getRow().getData().status;
+                    if(status != "CHECKED") {
+                        swal({type:"error", title:"아직 추첨 되지 않았습니다"});
+                        return;
+                    } 
+
                     var numOfWinners = cell.getRow().getData().numOfWinners;
                     var verification = false;
                     var outputhtml =
@@ -1348,26 +1356,73 @@ $(document).ready(function() {
                                     text: textStatVrfy,
                                     preConfirm: () => {
                                         console.log("통계");
+                                        // numOfTrial += numOfTrial * 10;
+
                                         var dataStatistics = 
                                             getDataStatistics(randomEngineNoSource, "", sWinners, sParticipants, numOfTrial);
-                                        gStdDev = stdev(dataStatistics);
-                                        console.log("분산:", gStdDev.variance);
-                                        console.log("평균:", gStdDev.mean);
-                                        console.log("표준편차:", gStdDev.deviation);
+                                        // gStdDev = stdev(dataStatistics);
+                                        var n = numOfTrial;
+                                        var w = sWinners;
+                                        var N = sParticipants;
+                                        var p = (w / N);
+                                        var q = 1.0 - p;
+                                        var m = n * p;
+                                        var v = n * p * q;
+                                        var s = Math.sqrt(n * p * q);
+
+                                        console.log("n:", n);
+                                        console.log("w:", w);
+                                        console.log("N:", N);
+                                        console.log("p:", p);
+                                        console.log("q:", q);
+                                        console.log("m:", m);
+                                        console.log("v:", v);
+                                        console.log("s:", s);
+                                        // var sigma
+                                        // console.log("분산:", gStdDev.variance);
+                                        // console.log("평균:", gStdDev.mean);
+                                        // console.log("표준편차:", gStdDev.deviation);
                                         // console.log("표준편차:", Math.sqrt(gStdDev.variance));
                                         var zScores = [];
+                                        var successFlag = true;
                                         for (var i = 0; i < sParticipants; ++i) {
-                                            console.log("data", dataStatistics[i]);
-                                            var z = Math.abs(dataStatistics[i] - gStdDev.mean) / gStdDev.deviation;
+                                            // var z = Math.abs(dataStatistics[i] - m) / s;
+                                            var z = jStat.zscore(dataStatistics[i], m, s);
+                                            var ztest = jStat.ztest(dataStatistics[i], m, s, 2);
                                             zScores.push(z);
-                                            console.log("z", i, " : ", z);
+
+                                            console.log("평균보다 " + (dataStatistics[i] - m) + "만큼 더/덜 당첨");
+                                            // console.log("(m0-m)/s=z", dataStatistics[i] - m, z);
+                                            console.log("jStat.zscore: ", jStat.zscore(dataStatistics[i], m, s));
+                                            // console.log("jStat.test(one-side): ", jStat.ztest(dataStatistics[i], m, s, 1));
+                                            console.log("jStat.test(two-side): ", jStat.ztest(dataStatistics[i], m, s, 2));
+
+                                            // console.log("z", i, " : ", z);
+
+                                            if (Math.abs(z) > ztestMax) {
+                                                successFlag = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (successFlag) {
+                                            finalHtmlOutput += "<div><font color='red'><b>성공</b></font></div>"
+                                        } else {
+                                            finalHtmlOutput += "<div><font color='red'><b>실패</b></font></div>"
                                         }
 
                                         finalHtmlOutput += 
-                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 통계적으로 균일 분포(uniform distribution)를 따르는지 검사하는 모의 실험입니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨자 수(w), 참여자 수(p)가 주어졌을때, 각 참여자가 당첨된 횟수를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
-                                            "<div>평균:" + gStdDev.mean         + "</div>" +
-                                            "<div>분산:" + gStdDev.variance     + "</div>" +
-                                            "<div>표준편차:" + gStdDev.deviation    + "</div>" +
+                                            "<div><b>추첨스크립트의 통계적 검증</b><br>행사에 사용된 추첨 스크립트가 특정 참여자를 유독 많이 당첨시키는지를 검사합니다. 추첨 사건 일어난 횟수 n, 각 참여자가 당첨될 확률 p일때, 추첨 스크립트는 이항 분포를 따릅니다. 통계학에서의 중심 극한 정리(central limit theorem)에 따르면, n이 충분히 크면 모든 확률 분포는 정규 분포를 따릅니다. 따라서 z값 검정 (z-test) 과정을 통해 특정 참여자가 평균보다 얼만큼(k) 더 당첨이 되었는지를 계산하고, 이를 통해 추첨 스크립트의 공평성을 측정합니다. k값은 평균으로부터의 차이의 허용 범위를 나타냅니다. k값이 클수록 z값도 높아집니다. z값이 사전에 정해놓은 최대 수치보다 크면 검증 실패, 작으면 검증 성공으로 구분합니다. 아래 그래프는 시행 횟수(n), 시행 별 당첨될 확률(p)가 주어졌을때의 시행 결과를 나타냅니다. 막대 그래프의 높이가 서로 균등할수록 공평한 추첨으로 간주됩니다. </div>" +
+                                            // "<b>" +
+                                            "<div>시행 횟수(n) = " + n + "</div>" +
+                                            "<div>우승자 수(w) = " + w + "</div>" +
+                                            "<div>참여자 수(N) = " + N + "</div>" +
+                                            "<div>당첨 확률(p=w/N) = " + p + "</div>" +
+                                            "<div>기댓값(m=np) = " + m + "</div>" +
+                                            "<div>분산(v=np(1-p)) = " + v + "</div>" +
+                                            "<div>표준편차(s=np(1-p)) = " + s + "</div>" +
+                                            "<div>zMax = " + ztestMax + "</div>" +
+                                            // "</b>" +
                                             // "<div>참여자 별 z-score : [" + zScores + "]</div>" +
                                             // "<div>표준편차:" + Math.sqrt(gStdDev.variance) + "</div>" +
                                             "<div style='display:block; margin-left:auto; margin-right:auto;width:50%;'class='chart' id='googleChart_div'></div><div id='googleChart'></div>";
@@ -1864,6 +1919,7 @@ $(document).ready(function() {
         $("#allQueryTableReserved").tabulator("hideColumn","participantList");
         $("#allQueryTableReserved").tabulator("hideColumn","randomKey");
         $("#allQueryTableReserved").tabulator("hideColumn","lotteryNote");
+        $("#allQueryTableReserved").tabulator("redraw");
     }
 
     $("#falseDemo").click(function() {

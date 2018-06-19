@@ -121,7 +121,7 @@ app.use("/lib", express.static(__dirname + "/lib"));
 app.use("/style", express.static(__dirname + "/style"));
 app.use("/font-awesome-4.5.0", express.static(__dirname + "/templatemo_485_rainbow/font-awesome-4.5.0/"));
 app.use("/css", express.static(__dirname + "/templatemo_485_rainbow/css/"));
-app.use("/load-awesome", express.static(__dirname + "/load-awesome/css/"));
+app.use("/load-awesome", express.static(__dirname + "/lib/load-awesome/css/"));
 app.use("/js", express.static(__dirname + "/templatemo_485_rainbow/js/"));
 app.use("/img", express.static(__dirname + "/templatemo_485_rainbow/img/"));
 app.use("/charts.js", express.static(__dirname + "/templatemo_485_rainbow/charts.js"));
@@ -130,11 +130,11 @@ app.use("/sha256.js", express.static(__dirname + "/templatemo_485_rainbow/sha256
 app.use("/charts.css", express.static(__dirname + "/templatemo_485_rainbow/charts.css"));
 
 app.use("/tabulator/*", express.static(__dirname + "/tabulator/*"));
-app.use("/tabulator/dist/css/tabulator.min.css", express.static(__dirname + "/tabulator/dist/css/tabulator.min.css"));
-app.use("/tabulator/dist/js/tabulator.min.js", express.static(__dirname + "/tabulator/dist/js/tabulator.min.js"));
-app.use("/sjcl.js", express.static(__dirname + "/sjcl.js"));
-app.use("/swal-forms.js", express.static(__dirname + "/swal-forms.js"));
-app.use("/swal-forms.css", express.static(__dirname + "/swal-forms.css"));
+app.use("/tabulator/dist/css/tabulator.min.css", express.static(__dirname + "/lib/tabulator/dist/css/tabulator.min.css"));
+app.use("/tabulator/dist/js/tabulator.min.js", express.static(__dirname + "/lib/tabulator/dist/js/tabulator.min.js"));
+app.use("/sjcl.js", express.static(__dirname + "/lib/sjcl.js"));
+app.use("/swal-forms.js", express.static(__dirname + "/lib/swal-forms.js"));
+app.use("/swal-forms.css", express.static(__dirname + "/lib/swal-forms.css"));
 app.use("/images", express.static(__dirname + "/images"));
 
 app.get('/', function(req, res){
