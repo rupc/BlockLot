@@ -789,7 +789,7 @@ app.post('/validate-token', function(req, res) {
 
     function validateHostAuthToken(token) {
         // TODO 나중에는 DB 쿼리하거나, (오프라인)파일에서 찾거나 하는 식으로 바꿀 예정
-        if (token == "sslab") return "true";
+        if (token == "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjU1ODU4ODksInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI5NTg1ODg5fQ.bZz_W9h-q6PSc9_rXCuxTnlaD33CZKuj2oE83lZk0GM") return "true";
         return "false";
     }
     // Validate auth token

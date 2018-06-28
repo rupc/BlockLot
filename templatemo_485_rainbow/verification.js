@@ -159,6 +159,8 @@ function vrfyInfo(lottery) {
     vrfyBag[10] = lottery.drawTxID;
     vrfyBag[11] = lottery.channelID;
 
+    var details = JSON.stringify(lottery, null, 2);
+
     var concatenated = "";
     for (var i = 0; i < vrfyBag.length; ++i) {
         console.log(vrfyBag[i]);
@@ -175,12 +177,13 @@ function vrfyInfo(lottery) {
         successFlag = false;
     }
 
-    outputhtml = "행사 정보 무결성 검증은 행사 등록 당시의 정보와 추첨을 하기까지의 정보들을 사용하여 무결성을 검증합니다. 구체적으로 (행사 이름, 발행일, 마감일, 발표일, 참여자 수, 우승자 수, 참여자 명단, 랜덤 키, 이벤트 식별자, 타겟 블록, 우승자 수, 추첨 스크립트, 추첨 노트, 추첨 트랜잭션 ID, 채널 ID)를 ";
+    outputhtml = "행사 정보 무결성 검증은 행사 등록 당시의 정보와 추첨을 하기까지의 정보들을 사용하여 무결성을 검증합니다. 구체적으로 (행사 이름, 발행일, 마감일, 발표일, 참여자 수, 우승자 수, 참여자 명단, 랜덤 키, 이벤트 식별자, 타겟 블록, 우승자 수, 추첨 스크립트, 추첨 노트, 추첨 트랜잭션 ID, 채널 ID)에 대한 해시 값의 일정 여부를 검증합니다.";
 
     return {
         successFlag : successFlag,
         calculatedKey : comp,
         verifiableRandomKey : verifiableRandomKey,
+        details : details,
     };
 }
 
@@ -210,6 +213,7 @@ function vrfyWinner(lottery) {
 
     var url = getBlockByHeight(targetBlock);
     var calculatedWinnerList = [];
+    var blockHash;
     $.ajax({
         url: url,
         type: "GET", 
@@ -218,7 +222,7 @@ function vrfyWinner(lottery) {
         async: false,
         // crossDomain:true,
         success: function(responseData) {
-            var blockHash = responseData.blocks[0].hash;
+            blockHash = responseData.blocks[0].hash;
             var winnerList = drawByFisherYatesShuffle(numOfParticipants, numOfWinners, blockHash);
             console.log(blockHash);
 
@@ -239,6 +243,10 @@ function vrfyWinner(lottery) {
     });
 
     return {
+        numOfParticipants : numOfParticipants,
+        numOfWinners: numOfWinners,
+        targetBlock : targetBlock,
+        blockHash : blockHash,
         successFlag: successFlag,
         calculatedWinnerList: calculatedWinnerList,
         winnerListArray: winnerListArray,

@@ -14,7 +14,7 @@ function clickChaininfo() {
 
     var openTxID = gLottery.openTxID; // 행사 등록 트랜잭션 ID
     var openBlockHeight; // 등록 트랜잭션이 포함된 블록 번호
-    var openBlockInfo; // 등록 트랜잭션이 포함된 블록의 정보
+    var openBlockInfo;
 
     var subscribeTxIDs = gLottery.subscribeTxIDs;
     
@@ -53,6 +53,7 @@ function clickChaininfo() {
 
         "<li onclick='queryDrawTxID()' data-toggle='tooltip' title='추첨 트랜잭션 ID를 나타냅니다' style='text-align: left;'><b>추첨</b>: <span style='color:DarkBlue; cursor:pointer;'>" + drawTxID + "</span></li>" + 
 
+        
         "<li style='text-align: left;'><b>응모</b>: " + subscribeTxIDs + "</li>" + 
 
         "<li onclick='queryPeers()' style='text-align: left;'><b>피어 목록</b>: <span data-toggle='tooltip' title='SDK 서버와 통신하는 블록체인 피어 주소를 나타냅니다' style='color:DarkBlue; cursor:pointer;'>" + "<i class='fa fa-bank'; style='font-size:26px;color:DarkBlue'></i>" + "</span></li>" + 
@@ -548,7 +549,7 @@ $(document).ready(function() {
                     channelID : obj.ChannelID,
                     openTxID : obj.OpenTxID,
                     drawTxID : obj.DrawTxID,
-                    subscribeTxIDs : obj.SubscribeTxIDs,
+                    subscribeTxIDs : obj.SubscribeTxID,
                     openClientIdentity : obj.OpenClientIdentity,
                     anchorPeer : obj.AnchorPeer,
                     chaincodeName : obj.ChaincodeName,
@@ -1219,6 +1220,9 @@ $(document).ready(function() {
                                         var lottery = cell.getRow().getData();
                                         var verifyResult = vrfyInfo(lottery);
                                         isInfoVrfy = verifyResult.successFlag;
+// var peerResponse = JSON.parse(responseData).peersResponses;
+
+                                        var details = verifyResult.details;
                                         finalHtmlOutput += "<div><b>행사 정보 무결성 검증</b></div>";
                                         if (isInfoVrfy) {
                                             console.log("행사 정보 무결성 검증 성공");
@@ -1227,6 +1231,8 @@ $(document).ready(function() {
                                             console.log("행사 정보 무결성 검증 실패");
                                             finalHtmlOutput += "<font color='red'><b>실패</b></font></div>";
                                         }
+                                        // finalHtmlOutput += "<div>행사 세부 사항</div>"
+                                        finalHtmlOutput += "<pre style='text-align: left;'>" + details + "</pre>";
                                         finalHtmlOutput += "<div><b>검증키: " + verifyResult.verifiableRandomKey +"</b></div>";
                                         finalHtmlOutput += "<div><b>계산 결과: " + verifyResult.calculatedKey +"</b></div>";
                                         finalHtmlOutput += "<br><br>";
@@ -1253,8 +1259,12 @@ $(document).ready(function() {
                                             console.log("당첨자 명단 검증 실패");
                                             finalHtmlOutput += "<font color='red'></b>실패</b></font></div>";
                                         }
-                                        finalHtmlOutput += "<div>랜덤 소스, 참가자 명단, 우승자 수, 그리고 추첨 스크립트(Knuth-Fisher-Yates random shuffling)를 사용하여 당첨자를 계산한 결과는 다음과 같습니다";
-                                        finalHtmlOutput += "<div><b>당첨자 명단: " + verifyResult.winnerListArray + "</b></div>"
+                                        finalHtmlOutput += "<div>랜덤 소스, 참가자 수, 당첨자 수, 그리고 추첨 스크립트(Fisher-Yates random shuffling)를 사용하여 당첨자를 계산한 결과는 다음과 같습니다";
+
+                                        finalHtmlOutput += "<div><b>랜덤 소스: " + verifyResult.blockHash + "</b></div>"
+                                        finalHtmlOutput += "<div><b>참가자 수: " + verifyResult.numOfParticipants + "</b></div>"
+                                        finalHtmlOutput += "<div><b>당첨자 수: " + verifyResult.numOfWinners + "</b></div>"
+                                        finalHtmlOutput += "<div><b>당첨자 명단: " + verifyResult.winnerListArray + "</b></div><br>"
                                         finalHtmlOutput += "<div><b>계산 결과: " + verifyResult.calculatedWinnerList + "</b></div><br>"
                                         finalHtmlOutput += "<br><br>";
                                     },
