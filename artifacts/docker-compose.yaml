@@ -42,7 +42,7 @@ services:
     container_name: ca_peerOrg2
 
   orderer.example.com:
-    container_name: orderer.blocklot.com
+    container_name: orderer.example.com
     image: hyperledger/fabric-orderer
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
@@ -66,7 +66,7 @@ services:
         - ./channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/:/etc/hyperledger/crypto/peerOrg2
 
   peer0.org1.example.com:
-    container_name: peer0.org1.blocklot.com
+    container_name: peer0.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -83,7 +83,7 @@ services:
       - orderer.example.com
 
   peer1.org1.example.com:
-    container_name: peer1.org1.blocklot.com
+    container_name: peer1.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -100,7 +100,7 @@ services:
       - orderer.example.com
 
   peer2.org1.example.com:
-    container_name: peer2.org1.blocklot.com
+    container_name: peer2.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -115,7 +115,7 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/:/etc/hyperledger/crypto/peer
 
   peer3.org1.example.com:
-    container_name: peer3.org1.blocklot.com
+    container_name: peer3.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -130,7 +130,7 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer3.org1.example.com/:/etc/hyperledger/crypto/peer
 
   peer4.org1.example.com:
-    container_name: peer4.org1.blocklot.com
+    container_name: peer4.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -145,7 +145,7 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer4.org1.example.com/:/etc/hyperledger/crypto/peer
 
   peer5.org1.example.com:
-    container_name: peer5.org1.blocklot.com
+    container_name: peer5.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -160,7 +160,7 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer5.org1.example.com/:/etc/hyperledger/crypto/peer
 
   peer6.org1.example.com:
-    container_name: peer6.org1.blocklot.com
+    container_name: peer6.org1.example.com
     extends:
       file:   base.yaml
       service: peer-base

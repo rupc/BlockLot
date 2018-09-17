@@ -122,9 +122,13 @@ function chaincodeQuery() {
 }
 
 function networkInitialize() {
+    echo "create channels..."
     createChannels
+    echo "join channels..."
     joinChannel
+    echo "chaincodes Install..."
     chaincodesInstall
+    echo "chaincodes Instantiate..."
     chaincodesInstantiate
 }
 
