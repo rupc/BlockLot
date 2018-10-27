@@ -118,18 +118,18 @@ app.use(allowCrossDomain);
 app.use(bodyParser.urlencoded());
 
 // Allow client to use /lib
-app.use("/click.js", express.static(__dirname + "/templatemo_485_rainbow/click.js"));
+app.use("/click.js", express.static(__dirname + "/web-client/click.js"));
 app.use("/lib", express.static(__dirname + "/lib"));
 app.use("/style", express.static(__dirname + "/style"));
-app.use("/font-awesome-4.5.0", express.static(__dirname + "/templatemo_485_rainbow/font-awesome-4.5.0/"));
-app.use("/css", express.static(__dirname + "/templatemo_485_rainbow/css/"));
+app.use("/font-awesome-4.5.0", express.static(__dirname + "/web-client/font-awesome-4.5.0/"));
+app.use("/css", express.static(__dirname + "/web-client/css/"));
 app.use("/load-awesome", express.static(__dirname + "/lib/load-awesome/css/"));
-app.use("/js", express.static(__dirname + "/templatemo_485_rainbow/js/"));
-app.use("/img", express.static(__dirname + "/templatemo_485_rainbow/img/"));
-app.use("/charts.js", express.static(__dirname + "/templatemo_485_rainbow/charts.js"));
-app.use("/verification.js", express.static(__dirname + "/templatemo_485_rainbow/verification.js"));
-app.use("/sha256.js", express.static(__dirname + "/templatemo_485_rainbow/sha256.js"));
-app.use("/charts.css", express.static(__dirname + "/templatemo_485_rainbow/charts.css"));
+app.use("/js", express.static(__dirname + "/web-client/js/"));
+app.use("/img", express.static(__dirname + "/web-client/img/"));
+app.use("/charts.js", express.static(__dirname + "/web-client/charts.js"));
+app.use("/verification.js", express.static(__dirname + "/web-client/verification.js"));
+app.use("/sha256.js", express.static(__dirname + "/web-client/sha256.js"));
+app.use("/charts.css", express.static(__dirname + "/web-client/charts.css"));
 
 app.use("/tabulator/*", express.static(__dirname + "/tabulator/*"));
 app.use("/tabulator/dist/css/tabulator.min.css", express.static(__dirname + "/lib/tabulator/dist/css/tabulator.min.css"));
@@ -141,7 +141,7 @@ app.use("/images", express.static(__dirname + "/images"));
 app.use("/report", express.static(__dirname + "/report"));
 
 app.get('/', function(req, res){
-    response_client_html(res, "templatemo_485_rainbow/index.html");
+    response_client_html(res, "web-client/index.html");
 });
 
 app.get('/all', function(req, res) {
@@ -149,11 +149,11 @@ app.get('/all', function(req, res) {
 });
 
 app.get('/index.html', function(req, res) {
-    response_client_html(res, "templatemo_485_rainbow/index.html");
+    response_client_html(res, "web-client/index.html");
 });
 
 app.get('/elements.html', function(req, res) {
-    response_client_html(res, "templatemo_485_rainbow/elements.html");
+    response_client_html(res, "web-client/elements.html");
 });
 
 app.get('/subscribe.html', function(req, res) {
