@@ -214,17 +214,23 @@ function vrfyWinner(lottery) {
     var url = getBlockByHeight(targetBlock);
     var calculatedWinnerList = [];
     var blockHash;
+    var concatWinnerList = "";
     $.ajax({
         url: url,
         type: "GET", 
         dataType: 'json',
         contentType: 'text/plain',
         async: false,
-        // crossDomain:true,
+        headers: {
+            'Access-Control-Allow-Origin': '*'
+        },
+        crossDomain:true,
         success: function(responseData) {
             blockHash = responseData.blocks[0].hash;
+            // calculated winners
             var winnerList = drawByFisherYatesShuffle(numOfParticipants, numOfWinners, blockHash);
             console.log(blockHash);
+
 
             for (var i = 0; i < numOfWinners; ++i) {
                 console.log(participantArray[winnerList[i]], " vs ", winnerListArray[i]);
@@ -233,6 +239,11 @@ function vrfyWinner(lottery) {
                     break;
                 }
                 calculatedWinnerList.push(participantArray[winnerList[i]]);
+            }
+
+            for (var i = 0; i < winnerList.length; ++i) {
+                console.log(winnerList[i], participantArray[winnerList[i]]);
+                concatWinnerList += i+1 + ":" + participantArray[winnerList[i]] + ", ";
             }
 
             // successFlag = true;
@@ -248,7 +259,8 @@ function vrfyWinner(lottery) {
         targetBlock : targetBlock,
         blockHash : blockHash,
         successFlag: successFlag,
-        calculatedWinnerList: calculatedWinnerList,
+        calculatedWinnerList: concatWinnerList,
+        // concatWinnerList: concatWinnerList,
         winnerListArray: winnerListArray,
     };
 }

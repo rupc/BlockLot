@@ -15,6 +15,11 @@ var stringify = require("json-stringify-pretty-compact");
 var waitUntil = require('wait-until');
 var nodemailer = require('nodemailer');
 var pdf = require('html-pdf');
+var async = require('async');
+var subscribe_sem = require('semaphore')(1);
+var Queue = require('queue-fifo');
+
+var queue = new Queue();
 
 const execSync = require('child_process').execSync;
 const syncClient = require('sync-rest-client');
@@ -119,6 +124,7 @@ app.use(bodyParser.urlencoded());
 
 // Allow client to use /lib
 app.use("/click.js", express.static(__dirname + "/web-client/click.js"));
+app.use("/admin_click.js", express.static(__dirname + "/web-client/admin_click.js"));
 app.use("/lib", express.static(__dirname + "/lib"));
 app.use("/style", express.static(__dirname + "/style"));
 app.use("/font-awesome-4.5.0", express.static(__dirname + "/web-client/font-awesome-4.5.0/"));
@@ -154,6 +160,10 @@ app.get('/index.html', function(req, res) {
 
 app.get('/elements.html', function(req, res) {
     response_client_html(res, "web-client/elements.html");
+});
+
+app.get('/admin.html', function(req, res) {
+    response_client_html(res, "web-client/admin_elements.html");
 });
 
 app.get('/subscribe.html', function(req, res) {
@@ -521,6 +531,48 @@ function validateEmail(email) {
   return re.test(email);
 }
 
+app.post('/counterfeit', function(req, res) {
+    logger.info("/counterfeit")
+    var fraudWinners = req.body.fraudWinners;
+    var functionName = req.body.functionName;
+    var eventHash = req.body.eventHash;
+    var lotteryName = req.body.lotteryName;
+    logger.debug(eventHash, lotteryName, functionName, fraudWinners);
+
+    var allData = {
+        "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
+        "fcn" : "invoke",
+        "args" : ["counterfeit", eventHash, fraudWinners],
+    };
+
+    var args = {
+        data: allData,
+        headers: {
+            "Authorization" : TokenForServer,
+            "Content-Type": "application/json" },
+        requestConfig: {
+            timeout: 60000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
+    };
+
+    // Subscribe given user
+    // sleep.sleep(1);
+    var counterfeitReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
+        console.log("data", data);
+        var tx_id = data.tx_id_string_;
+        // console.log("response", response);
+        // res.write(tx_id);
+        res.write("조작 성공");
+        res.end();
+    });
+
+    // res.write("조작 실패");
+    // res.status(408).send("조작 성공!");
+})
+
 app.post('/subscribe', function(req, res) {
     logger.info("/subscribe")
     // Unpack parameters
@@ -534,11 +586,11 @@ app.post('/subscribe', function(req, res) {
     var identityHash = "" + GetIdentityHash(participantName);
     var nonce = "" + GetRandomNonceStr(10);
 
-    logger.debug("eventHash", eventHash);
-    logger.debug("lotteryName", lotteryName);
     logger.debug("participantName", participantName);
-    logger.debug("identityHash", identityHash);
-    logger.debug("nonce", nonce);
+    // logger.debug("eventHash", eventHash);
+    // logger.debug("lotteryName", lotteryName);
+    // logger.debug("identityHash", identityHash);
+    // logger.debug("nonce", nonce);
 
     // REST API 호출
     // set content-type header and data as json in args parameter
@@ -558,157 +610,235 @@ app.post('/subscribe', function(req, res) {
         },
     };
 
-    var token;
+    // random init token
+    var token = (crypto.randomBytes(32)).toString('hex');
     var message;
     var secret;
 
     // Get user token
     // var response = syncClient.get(requestURL, args);
-    var subscribeInvoke;
-    var subscribeReq = client.post(SDKWebServerAddress + "/users", args, function (data, response) {
-        // parsed response body as js object
-        // console.log(data);
-        // raw response
-        token = data.token;
-        message = data.message;
-        secret = data.secret;
 
-        // console.log(response);
-        // logger.info("token: ", token);
-        // logger.info("message: ", message);
-        // logger.info("secret: ", secret);
-        // logger.info("response.alreadyEnrolled: ", response.alreadyEnrolled);
-        // logger.info("data.alreadyEnrolled: ", data.alreadyEnrolled);
 
-        if (data.alreadyEnrolled == true) {
-            logger.warn("%s is already enrolled", participantName);
-            res.status(408).send("응모 실패(이미 등록됨)");
+    // Existing method: Request identity from CA and then returns encrypted identity
+    var requestIdentityFromCA = function() {
+        var subscribeReq = client.post(SDKWebServerAddress + "/users", args, function (data, response) {
+            // parsed response body as js object
+            // console.log(data);
+            // raw response
+            token = data.token;
+            message = data.message;
+            secret = data.secret;
+
+            // console.log(response);
+            // logger.info("token: ", token);
+            // logger.info("message: ", message);
+            // logger.info("secret: ", secret);
+            // logger.info("response.alreadyEnrolled: ", response.alreadyEnrolled);
+            // logger.info("data.alreadyEnrolled: ", data.alreadyEnrolled);
+
+            if (data.alreadyEnrolled == true) {
+                logger.warn("%s is already enrolled", participantName);
+                res.status(408).send("응모 실패(이미 등록됨)");
+                return;
+            }
+            // sha256(token + participantName)
+
+            var sha256 = crypto.createHash('sha256');
+            var encryptedIdentity = sha256.update(token + participantName).digest('hex');
+
+            subscribeInvoke(encryptedIdentity);
+        });
+        subscribeReq.on('requestTimeout', function (req) {
+            logger.warn('응모 토큰 획득 실패');
+            // subscribeReq.abort();
+            res.status(408).send("응모 실패");
             return;
-        }
-        // sha256(token + participantName)
-        
-        var sha256 = crypto.createHash('sha256');
-        var encryptedIdentity = sha256.update(token + participantName).digest('hex');
+        });
 
-        subscribeInvoke(encryptedIdentity);
-    });
+        subscribeReq.on('error', function(err) {
+            res.status(408).send("응모 실패");
+            logger.error(err);
+            return;
+        });
+    }
 
+    // requestIdentityFromCA(encryptedIdentity);
 
-    subscribeReq.on('requestTimeout', function (req) {
-        logger.warn('응모 토큰 획득 실패');
-        // subscribeReq.abort();
-        res.status(408).send("응모 실패");
-        return;
-    });
-
-    subscribeReq.on('error', function(err) {
-        res.status(408).send("응모 실패");
-        logger.error(err);
-        return;
-    });
 
     // args[1] : Event hash (event identity) from client
     // args[2] : Member name(or identity) from client
     // args[3] : current timestamp from client
-    subscribeInvoke = function(encryptedIdentity) {
-        var current_ts = "" + Math.floor(Date.now() / 1000);
-        var allData1 = {
-            "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
-            "fcn" : "invoke",
-            "args" : ["subscribe", eventHash, encryptedIdentity, current_ts],
-        };
 
-        var args1 = {
-            data: allData1,
-            headers: {
-                "Authorization" : TokenForServer,
-                "Content-Type": "application/json" },
-            requestConfig: {
-                timeout: 30000, //request timeout in milliseconds
-                noDelay: true, //Enable/disable the Nagle algorithm
-                keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
-                keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
-            },
-        };
-
-        // Subscribe given user
-        // sleep.sleep(1);
-        var subscribeTxReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
-            // parsed response body as js object
-            console.log("data", data);
-            var tx_id = data.tx_id_string_;
-            var payload = data.payload_;
-
-            if (typeof payload !== "strings") {
-                logger.debug("Typeof payload:", typeof payload);
-                payload = "null";
-            }
-            logger.debug(typeof payload);
-            logger.debug("tx_id", tx_id);
-            logger.debug("payload", payload);
-            // raw response
-            // console.log("response", response);
-            // token = data.token;
-            // message = data.message;
-            // secret = data.secret;
-
-            // logger.info(token, message, secret);
-
-            if (validateEmail(participantName)) {
-                var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div> \
-                <div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
-                    "<div>" + lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다</div>" +
-                    "Token: <b><font color='red'>" + token + "</font></b></div>";
-
-                var mailOptions = {
-                    from: 'blocklot.tokensender@gmail.com',
-                    to: participantName,
-                    subject: '[BlockLot] 당첨자 인증 토큰',
-                    html: mailText
-                };
-
-
-                transporter.sendMail(mailOptions, function(error, info){
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        console.log('Email sent: ' + info.response);
-                    }
-
-                    transporter.close();
-                });
-            }
-            res.write(token);
-            res.end();
-        });
-
-        subscribeTxReq.on('error', function(err) {
-            logger.error(err);
-            res.status(408).send("응모 실패");
-            return;
-        });
-
-        subscribeTxReq.on('requestTimeout', function (req) {
-            logger.warn('응모 트랜잭션 실패');
-            res.status(408).send("응모 실패");
-            subscribeTxReq.abort();
-            return;
-        });
-
-
-        var useridentity = {
-            lotteryName_ : lotteryName,
-            participantName_ : participantName,
-            // identityHash_ : identityHash,
-            encryptedIdentity_ : encryptedIdentity,
-            nonce_ : nonce,
-            token_ : token
-        };
-
-        UserInfoTable.push(useridentity);
-        console.log("New user added(" + UserInfoTable.length + ")");
-    };
+    var subscribeReqBody = {
+        participantName: participantName,
+        eventHash: eventHash,
+        lotteryName: lotteryName,
+        res: res,
+        nonce: nonce,
+        token: token,
+    }
+    
+    console.log("Added", participantName);
+    queue.enqueue(subscribeReqBody);
 });
+
+function subscribeInvoke(req, next) {
+    // console.log("Invoked with", req);
+    var current_ts = "" + Math.floor(Date.now() / 1000);
+    var allData1 = {
+        "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
+        "fcn" : "invoke",
+        "args" : ["subscribe", req.eventHash, req.participantName, current_ts],
+    };
+
+    var args1 = {
+        data: allData1,
+        headers: {
+            "Authorization" : TokenForServer,
+            "Content-Type": "application/json" },
+        requestConfig: {
+            timeout: 30000, //request timeout in milliseconds
+            noDelay: true, //Enable/disable the Nagle algorithm
+            keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+            keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+        },
+    };
+
+    // Subscribe given user
+    // sleep.sleep(1);
+    var subscribeTxReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args1, function (data, response) {
+        // parsed response body as js object
+        console.log("data", data);
+        var tx_id = data.tx_id_string_;
+        var payload = data.payload_;
+
+        if (typeof payload !== "strings") {
+            logger.debug("Typeof payload:", typeof payload);
+            payload = "null";
+        }
+        // logger.debug(typeof payload);
+        // logger.debug("tx_id", tx_id);
+        // logger.debug("payload", payload);
+        // raw response
+        // console.log("response", response);
+        // token = data.token;
+        // message = data.message;
+        // secret = data.secret;
+
+        // logger.info(token, message, secret);
+
+        // when email entered
+        if (validateEmail(req.participantName)) {
+            RegisterByEmail(req.participantName, req.lotteryName, req.eventHash);
+        }
+        req.res.write(req.token);
+        req.res.end();
+
+        next();
+    });
+
+    subscribeTxReq.on('error', function(err) {
+        logger.error(err);
+        res.status(408).send("응모 실패");
+        return;
+    });
+
+    subscribeTxReq.on('requestTimeout', function (req) {
+        logger.warn('응모 트랜잭션 실패');
+        res.status(408).send("응모 실패");
+        subscribeTxReq.abort();
+        return;
+    });
+
+
+    var useridentity = {
+        lotteryName_ : req.lotteryName,
+        participantName_ : req.participantName,
+        // identityHash_ : identityHash,
+        // encryptedIdentity_ : recordedIdentity,
+        nonce_ : req.nonce,
+        token_ : req.token
+    };
+
+    UserInfoTable.push(useridentity);
+    console.log("New user added(" + UserInfoTable.length + ")");
+};
+
+function checkSubscribeQueue() {
+    if (queue.isEmpty()) {
+        // console.log("Queue empty");
+        return;
+    }
+
+    if (!subscribe_sem.available()) {
+        // console.log("NOT AVAIL");
+        return;
+    }
+
+    subscribe_sem.take(function(){
+        var qsize = queue.size();
+        var cnt = 0;
+        console.log("Process subscribe request batches in order", "queue size", qsize);
+
+        async.whilst(
+            function () {
+                if (cnt == qsize) {
+                    console.log("Release sema");
+                    subscribe_sem.leave();
+                }
+                console.log(cnt, qsize);
+
+                return cnt < qsize;
+            },
+            function (next) {
+                cnt++;
+                var popped_item = queue.peek();
+                queue.dequeue();
+                console.log("Dequeued item", popped_item.participantName);
+                subscribeInvoke(popped_item, next)
+                // next();
+            },
+            function (err) {
+                console.log("error", err);
+            });
+    });
+
+}
+
+function simulateSubs() {
+    const randomIdentity = (crypto.randomBytes(32)).toString('hex');
+    console.log("Enqueue random participant", randomIdentity);
+    queue.enqueue(randomIdentity);
+}
+
+setInterval(checkSubscribeQueue, 200)
+// setInterval(simulateSubs, 1000)
+
+function RegisterByEmail(participantName, lotteryName, eventHash) {
+    var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div> \
+        <div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
+        "<div>" + lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다</div>" +
+        "Token: <b><font color='red'>" + token + "</font></b></div>";
+
+    var mailOptions = {
+        from: 'blocklot.tokensender@gmail.com',
+        to: participantName,
+        subject: '[BlockLot] 당첨자 인증 토큰',
+        html: mailText
+    };
+
+
+    transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+
+        transporter.close();
+    });
+
+}
 
 app.post('/query-all-events', function(req, res) {
     logger.info("/query-all-events requested")
@@ -789,7 +919,8 @@ app.post('/validate-token', function(req, res) {
 
     function validateHostAuthToken(token) {
         // TODO 나중에는 DB 쿼리하거나, (오프라인)파일에서 찾거나 하는 식으로 바꿀 예정
-        if (token == "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjU1ODU4ODksInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI5NTg1ODg5fQ.bZz_W9h-q6PSc9_rXCuxTnlaD33CZKuj2oE83lZk0GM") return "true";
+        // if (token == "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjU1ODU4ODksInVzZXJuYW1lIjoiTG90dGVyeVNlcnZlciIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTI5NTg1ODg5fQ.bZz_W9h-q6PSc9_rXCuxTnlaD33CZKuj2oE83lZk0GM") return "true";
+        if (token == "1234") return "true";
         return "false";
     }
     // Validate auth token
