@@ -1,7 +1,7 @@
 var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
-var hostURL = "http://192.168.0.13:1185";
+// var hostURL = "http://192.168.0.13:1185";
 // var hostURL = "http://localhost:1185";
-// var hostURL = "http://141.223.121.56:1185";
+var hostURL = "http://141.223.121.56:1185";
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 // Lottery structure. got this when clicking the row
 var gLottery;
@@ -111,6 +111,7 @@ function queryChannelTx() {
         }
     });
 }
+
 function queryGenesisBlock() {
     showSpinner();
 

@@ -682,13 +682,13 @@ app.post('/subscribe', function(req, res) {
     queue.enqueue(subscribeReqBody);
 });
 
-function subscribeInvoke(req, next) {
-    // console.log("Invoked with", req);
+function subscribeInvoke(sreq, next) {
+    // console.log("Invoked with", sreq);
     var current_ts = "" + Math.floor(Date.now() / 1000);
     var allData1 = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
-        "args" : ["subscribe", req.eventHash, req.participantName, current_ts],
+        "args" : ["subscribe", sreq.eventHash, sreq.participantName, current_ts],
     };
 
     var args1 = {
@@ -716,11 +716,12 @@ function subscribeInvoke(req, next) {
             logger.debug("Typeof payload:", typeof payload);
             payload = "null";
         }
+
         // logger.debug(typeof payload);
         // logger.debug("tx_id", tx_id);
         // logger.debug("payload", payload);
         // raw response
-        // console.log("response", response);
+        console.log("response", response);
         // token = data.token;
         // message = data.message;
         // secret = data.secret;
@@ -728,36 +729,39 @@ function subscribeInvoke(req, next) {
         // logger.info(token, message, secret);
 
         // when email entered
-        if (validateEmail(req.participantName)) {
-            RegisterByEmail(req.participantName, req.lotteryName, req.eventHash);
+        if (validateEmail(sreq.participantName)) {
+            RegisterByEmail(sreq.participantName, sreq.lotteryName, sreq.eventHash);
         }
-        req.res.write(req.token);
-        req.res.end();
+        sreq.res.write(sreq.token);
+        sreq.res.end();
 
         next();
     });
 
     subscribeTxReq.on('error', function(err) {
         logger.error(err);
-        res.status(408).send("응모 실패");
+        sreq.res.write(err)
+        sreq.res.end();
         return;
     });
 
     subscribeTxReq.on('requestTimeout', function (req) {
-        logger.warn('응모 트랜잭션 실패');
-        res.status(408).send("응모 실패");
-        subscribeTxReq.abort();
+        logger.warn('응모 트랜잭션 실패', req);
+        // req.res.status(408).send("응모 실패");
+        sreq.res.write("응모 실패", "requestTimeout")
+        sreq.res.end();
+        // subscribeTxReq.abort();
         return;
     });
 
 
     var useridentity = {
-        lotteryName_ : req.lotteryName,
-        participantName_ : req.participantName,
+        lotteryName_ : sreq.lotteryName,
+        participantName_ : sreq.participantName,
         // identityHash_ : identityHash,
         // encryptedIdentity_ : recordedIdentity,
-        nonce_ : req.nonce,
-        token_ : req.token
+        nonce_ : sreq.nonce,
+        token_ : sreq.token
     };
 
     UserInfoTable.push(useridentity);
