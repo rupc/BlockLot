@@ -795,8 +795,8 @@ function checkSubscribeQueue() {
                 var popped_item = queue.peek();
                 queue.dequeue();
                 console.log("Dequeued item", popped_item.participantName);
+                // next() called inside subscribeInvoke()
                 subscribeInvoke(popped_item, next)
-                // next();
             },
             function (err) {
                 console.log("error", err);
