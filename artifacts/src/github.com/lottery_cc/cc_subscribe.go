@@ -43,7 +43,8 @@ func (t *SimpleChaincode) subscribe(stub shim.ChaincodeStubInterface, args []str
 	iCurr, _ := strconv.Atoi(args[3])
 	iDue, _ := strconv.Atoi(le.Duedate)
 	if iDue <= iCurr {
-		return shim.Error("Current time have passed through due date")
+		logger.Warning("Current time have passed through due date")
+		// return shim.Error("Current time have passed through due date")
 	}
 
 	// Get the number of current member list

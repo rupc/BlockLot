@@ -20,6 +20,7 @@ var subscribe_sem = require('semaphore')(1);
 var Queue = require('queue-fifo');
 
 var queue = new Queue();
+var postQueue = new Queue();
 
 const execSync = require('child_process').execSync;
 const syncClient = require('sync-rest-client');
@@ -30,6 +31,8 @@ const optionDefinitions = [
     { name: 'blockchain', alias: 'b', type: Boolean, defaultOption: false},
     { name: 'test', alias: 't', type: String }
 ]
+
+const tokensenderPasswd = "rmadustltjf";
 
 var transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -134,6 +137,7 @@ app.use("/js", express.static(__dirname + "/web-client/js/"));
 app.use("/img", express.static(__dirname + "/web-client/img/"));
 app.use("/charts.js", express.static(__dirname + "/web-client/charts.js"));
 app.use("/verification.js", express.static(__dirname + "/web-client/verification.js"));
+app.use("/req-gen.js", express.static(__dirname + "/web-client/req-gen.js"));
 app.use("/sha256.js", express.static(__dirname + "/web-client/sha256.js"));
 app.use("/charts.css", express.static(__dirname + "/web-client/charts.css"));
 
@@ -582,15 +586,15 @@ app.post('/subscribe', function(req, res) {
     var eventHash = "" + req.body.eventHash;
 
 
+    logger.debug(req);
+    logger.debug("participantName", participantName);
+    logger.debug("eventHash", eventHash);
+    logger.debug("lotteryName", lotteryName);
+    logger.debug("identityHash", identityHash);
+
     // Get cryptogrphaic info
     var identityHash = "" + GetIdentityHash(participantName);
     var nonce = "" + GetRandomNonceStr(10);
-
-    logger.debug("participantName", participantName);
-    // logger.debug("eventHash", eventHash);
-    // logger.debug("lotteryName", lotteryName);
-    // logger.debug("identityHash", identityHash);
-    // logger.debug("nonce", nonce);
 
     // REST API 호출
     // set content-type header and data as json in args parameter
@@ -682,13 +686,13 @@ app.post('/subscribe', function(req, res) {
     queue.enqueue(subscribeReqBody);
 });
 
-function subscribeInvoke(sreq, next) {
-    // console.log("Invoked with", sreq);
+function subscribeInvoke(req, next) {
+    // console.log("Invoked with", req);
     var current_ts = "" + Math.floor(Date.now() / 1000);
     var allData1 = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
-        "args" : ["subscribe", sreq.eventHash, sreq.participantName, current_ts],
+        "args" : ["subscribe", req.eventHash, req.participantName, current_ts],
     };
 
     var args1 = {
@@ -716,12 +720,11 @@ function subscribeInvoke(sreq, next) {
             logger.debug("Typeof payload:", typeof payload);
             payload = "null";
         }
-
         // logger.debug(typeof payload);
         // logger.debug("tx_id", tx_id);
         // logger.debug("payload", payload);
         // raw response
-        console.log("response", response);
+        // console.log("response", response);
         // token = data.token;
         // message = data.message;
         // secret = data.secret;
@@ -729,39 +732,36 @@ function subscribeInvoke(sreq, next) {
         // logger.info(token, message, secret);
 
         // when email entered
-        if (validateEmail(sreq.participantName)) {
-            RegisterByEmail(sreq.participantName, sreq.lotteryName, sreq.eventHash);
+        if (validateEmail(req.participantName)) {
+            RegisterByEmail(req.participantName, req.lotteryName, req.eventHash, req.token);
         }
-        sreq.res.write(sreq.token);
-        sreq.res.end();
+        req.res.write(req.token);
+        req.res.end();
 
         next();
     });
 
     subscribeTxReq.on('error', function(err) {
         logger.error(err);
-        sreq.res.write(err)
-        sreq.res.end();
+        res.status(408).send("응모 실패");
         return;
     });
 
     subscribeTxReq.on('requestTimeout', function (req) {
-        logger.warn('응모 트랜잭션 실패', req);
-        // req.res.status(408).send("응모 실패");
-        sreq.res.write("응모 실패", "requestTimeout")
-        sreq.res.end();
-        // subscribeTxReq.abort();
+        logger.warn('응모 트랜잭션 실패');
+        res.status(408).send("응모 실패");
+        subscribeTxReq.abort();
         return;
     });
 
 
     var useridentity = {
-        lotteryName_ : sreq.lotteryName,
-        participantName_ : sreq.participantName,
+        lotteryName_ : req.lotteryName,
+        participantName_ : req.participantName,
         // identityHash_ : identityHash,
         // encryptedIdentity_ : recordedIdentity,
-        nonce_ : sreq.nonce,
-        token_ : sreq.token
+        nonce_ : req.nonce,
+        token_ : req.token
     };
 
     UserInfoTable.push(useridentity);
@@ -779,6 +779,20 @@ function checkSubscribeQueue() {
         return;
     }
 
+    var differentNumOfLottery = 0;
+    var eventHashBag = {};
+
+    for (var i = 0; i < qsize; ++i) {
+        var popped_item = queue.peek();
+        if (typeof eventHashBag[popped_item.eventHash] === "undefined") {
+            eventHashBag[popped_item.eventHash] = popped_item.participantName;
+        } else {
+            eventHashBag[popped_item.eventHash] = "," + popped_item.participantName;
+        }
+        differentNumOfLottery++;
+        queue.dequeue();
+    }
+
     subscribe_sem.take(function(){
         var qsize = queue.size();
         var cnt = 0;
@@ -786,15 +800,15 @@ function checkSubscribeQueue() {
 
         async.whilst(
             function () {
-                if (cnt == qsize) {
+                if (cnt == differentNumOfLottery) {
                     console.log("Release sema");
                     subscribe_sem.leave();
                 }
-                console.log(cnt, qsize);
-
-                return cnt < qsize;
+                console.log("cnt", cnt, "differentNumOfLottery", differentNumOfLottery);
+                return cnt < differentNumOfLottery;
             },
             function (next) {
+                var subItem = Object.entries(eventHashBag)[cnt];
                 cnt++;
                 var popped_item = queue.peek();
                 queue.dequeue();
@@ -818,7 +832,7 @@ function simulateSubs() {
 setInterval(checkSubscribeQueue, 200)
 // setInterval(simulateSubs, 1000)
 
-function RegisterByEmail(participantName, lotteryName, eventHash) {
+function RegisterByEmail(participantName, lotteryName, eventHash, token) {
     var mailText = "<div>안녕하세요, 본 메일은 BlockLot 추첨 소프트웨어에서 당첨자 인증 토큰을 전달하기 위해 발송되었습니다.</div> \
         <div>당첨될 경우 토큰을 사용하여 당첨자를 인증하기 때문에 잊어버리지 않길 바랍니다.</div>" + 
         "<div>" + lotteryName + "(" + eventHash + ")" + "에 대한 토큰은 다음과 같습니다</div>" +
@@ -1321,7 +1335,7 @@ function QueryAllEvents(req, res) {
         };
 
         // console.log(payload);
-
+        console.log(JSON.stringify(payload));
         res.write(JSON.stringify(payload));
         res.end();
     });

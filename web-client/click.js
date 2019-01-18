@@ -495,7 +495,7 @@ $(document).ready(function() {
         data: "",
         success: function(responseData) {
             var sdkInfo = JSON.parse(responseData).sdkPayload;
-            var res = JSON.parse(responseData).ccPayload.split("@");
+            var res = JSON.parse(responseData).ccPayload.split("*");
             // console.log(responseData);
             // console.log(sdkInfo);
             // console.log(res);
@@ -511,6 +511,7 @@ $(document).ready(function() {
 
             var initTabledata = [ ];
             for (var i = 0; i < res.length; ++i) {
+                // JSON library cannot parse a unicode-encoded string
                 var obj = JSON.parse(res[i]);
                 var tsAnnouncementDate = obj.AnnouncementDate;
 
@@ -652,15 +653,35 @@ $(document).ready(function() {
             {title:"참여", headerSort:false, field:"subscribe", formatter:printSubscribeIcon, align:"center", width:"4px", 
                 cellClick:function(e, cell){
                     var lotteryName = cell.getRow().getData().name;
-                    var ts = cell.getRow().getData().tsAnnouncementDate;
-                    var curr_ts = Math.floor(Date.now() / 1000);
-                    if (curr_ts >= ts) {
-                        Swal({type:"error", title:"참여 기한이 마감되었습니다", 
+                    // Validate by timestamp of announcement date
+                    // var ts = cell.getRow().getData().tsAnnouncementDate;
+                    // var curr_ts = Math.floor(Date.now() / 1000);
+                    // if (curr_ts >= ts) {
+                        // Swal({type:"error", title:"참여 기한이 마감되었습니다", 
+                            // confirmButtonText: '확인',
+                            // cancelButtonText: '취소',
+                        // });
+                        // return;
+                    // }
+                    //
+                    //
+                    //
+                    //
+                    
+                    console.log("testing");
+                    test_subscribe_generator("tester123123", "ffa103cdc7fde9c7a08bc25d52bf359f1662ac5369ac47d8d2010a3e5c9358e1")
+                    return;
+
+                    // Validate by status
+                    var status = cell.getRow().getData().status;
+                    if(status == "CHECKED") {
+                        swal({type:"error", title:"이미 추첨되었습니다",
                             confirmButtonText: '확인',
                             cancelButtonText: '취소',
                         });
                         return;
-                    }
+                    }   
+
 
                     Swal({
                         title: '(' + lotteryName + ')' + '\n이름 또는 이메일을 입력하세요',
@@ -676,8 +697,8 @@ $(document).ready(function() {
                         if (result.value) {
                             var functionName = "subscribe";
                             var participantName = result.value;
-                            if (participantName.indexOf(',') > -1) {
-                                Swal("이름에 콤마(,)는 포함될 수 없습니다.")
+                            if (participantName.indexOf(',') > -1 || participantName.indexOf('*') > -1) {
+                                Swal("이름에 ,* 는 포함될 수 없습니다.")
                                 hideSpinner();
                                 return;
                             }
@@ -736,18 +757,18 @@ $(document).ready(function() {
                 cellClick:function(e, cell) {
 
                     // 테스트 중에는 굳이 이런 과정 필요 없음
-                    // Validate appropriate date
-                    var ts = cell.getRow().getData().tsAnnouncementDate;
-                    var curr_ts = getCurrentTimestamp();
-                    if (curr_ts <= ts) {
-                        Swal({type:"error", title:"발표일이 지나야 합니다",
-                            confirmButtonText: '확인',
-                            cancelButtonText: '취소',
-                        });
-                        return;
-                    }
+                    // Validate by timestamp of announcement date
+                    // var ts = cell.getRow().getData().tsAnnouncementDate;
+                    // var curr_ts = getCurrentTimestamp();
+                    // if (curr_ts <= ts) {
+                        // Swal({type:"error", title:"발표일이 지나야 합니다",
+                            // confirmButtonText: '확인',
+                            // cancelButtonText: '취소',
+                        // });
+                        // return;
+                    // }
 
-                    // Validate participants
+                    // Validate number of participants
                     var kRegistered = cell.getRow().getData().numOfRegistered;
                     if(kRegistered == 0) {
                         swal({type:"error", title:"참가자가 아무도 없습니다",
@@ -1946,6 +1967,7 @@ $(document).ready(function() {
     if (true) {
         $("#allQueryTableReserved").tabulator("hideColumn", "eventHash");
         // $("#allQueryTableReserved").tabulator("hideColumn", "script");
+        $("#allQueryTableReserved").tabulator("hideColumn","announceDate");
         $("#allQueryTableReserved").tabulator("hideColumn","tsAnnounceDate");
         $("#allQueryTableReserved").tabulator("hideColumn", "status");
         $("#allQueryTableReserved").tabulator("hideColumn", "targetBlock");
@@ -2110,3 +2132,4 @@ function showList() {
     console.log("call me");
     $("#showListText").toggle();
 }
+
