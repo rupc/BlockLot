@@ -495,12 +495,14 @@ $(document).ready(function() {
         data: "",
         success: function(responseData) {
             var sdkInfo = JSON.parse(responseData).sdkPayload;
+            console.log(JSON.parse(responseData).ccPayload);
             var res = JSON.parse(responseData).ccPayload.split("*");
             // console.log(responseData);
             // console.log(sdkInfo);
             // console.log(res);
             // var res = responseData.ccPayload.split("@");
-            var numOfPeer = 2
+            // var numOfPeer = 2
+            
             res.splice(0, 1);
             for (var i = 0, l = res.length; i < l; i++) {
                 if (res[i][res[i].length - 1] == ',') {

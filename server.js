@@ -643,6 +643,8 @@ app.post('/subscribe', function(req, res) {
     console.log("q size", queue.size());
 });
 
+// subscribeInvoke periodically called to fetch requests from a fifo-queue 
+// for batching the requests
 function subscribeInvoke(req, next) {
     // console.log("Invoked with", req);
     var current_ts = "" + Math.floor(Date.now() / 1000);
@@ -682,7 +684,11 @@ function subscribeInvoke(req, next) {
         }
         // logger.debug(typeof payload);
         // logger.debug("tx_id", tx_id);
-        // logger.debug("payload", payload);
+        // logger.debug("payload", data.payload_);
+        // logger.debug("Payload parse", JSON.parse(data.payload_));
+        logger.debug("EventName", JSON.parse(data.payload_).EventName);
+        logger.debug("EventHash", JSON.parse(data.payload_).EventHash);
+        updateLocalCache(cachedLotteries, JSON.parse(data.payload_));
         // raw response
         // console.log("response", response);
         // token = data.token;
@@ -1308,8 +1314,11 @@ function clone(a) {
 }
 
 function QueryAllEvents(req, res) {
-    if (!refreshRequired) {
-        logger.debug("Response cached data")
+    if (!refreshRequired || cachedLotteries === null ) {
+        // logger.debug("cachedLotteries type", typeof cachedLotteries)
+        // logger.debug("cachedLotteries contents", cachedLotteries)
+        // logger.debug("cachedLotteries ccPayload", cachedLotteries.ccPayload)
+
         res.write(JSON.stringify(cachedLotteries));
         res.end();
         return 
@@ -1384,4 +1393,42 @@ function QueryAllEvents(req, res) {
 
 function selectScript() {
     return "sample 1";
+}
+
+
+// updateLocalCache should support a replacement of an old lottery event
+function updateLocalCache(cachedWhole, updatedLottery) {
+    var res = cachedLotteries.ccPayload.split("*");
+    // console.log("BEFORE splice op. res", res);
+    res.splice(0, 1);
+    // Remove trailing comma...
+    for (var i = 0, l = res.length; i < l; i++) {
+        if (res[i][res[i].length - 1] == ',') {
+            //res[i] = res[i].substring(0, res[i].length - 2);
+            res[i] = res[i].slice(0, -1);
+        }
+    }
+    // console.log("AFTER splice op. res", res);
+
+    for (var i = 0; i < res.length; ++i) {
+        var obj = JSON.parse(res[i]);
+        if (obj.InputHash == updatedLottery.InputHash) {
+            // logger.debug("res[i]", typeof res[i], typeof JSON.parse(res[i]), JSON.parse(res[i]));
+            // logger.debug("updatedLottery", typeof updatedLottery, updatedLottery);
+            logger.debug("updatedLottery", i, updatedLottery.EventName, updatedLottery.InputHash);
+            res[i] = JSON.stringify(updatedLottery);
+            break;
+        }
+    }
+
+    var afterRes ;
+    afterRes = "''*" + res.join("*");
+    console.log(afterRes);
+    cachedLotteries.ccPayload = clone(afterRes);
+    // console.log("AFTER replacement and join op. res", afterRes);
+}
+
+// Wraps local cache for the client-side parser
+function packLocalCache() {
+    
 }
