@@ -56,6 +56,7 @@ type lottery_event struct {
 	RandomKey           string `json:"RandomKey"`       // This is from input, so it's not non-deterministic
 	InputHash           string `json:"InputHash"`       // built from eventname, duedate, num of members, winners and member list, randomkey from server
 	FutureBlockHeight   string `json:"FutureBlockHeight"`
+	TargetBlockHash     string `json:"TargetBlockHash"`
 	WinnerList          string `json:"WinnerList"` // comma seperated winner list
 	Script              string `json:"Script"`     // script text for draw()
 	VerifiableRandomkey string `json:"VerifiableRandomkey"`
@@ -81,6 +82,7 @@ func (l lottery_event) GetAllConcats() string {
 		l.RandomKey +
 		l.InputHash +
 		l.FutureBlockHeight +
+		l.TargetBlockHash +
 		l.WinnerList +
 		l.Script +
 		l.LotteryNote +
@@ -93,6 +95,7 @@ func (l lottery_event) GetAllConcats() string {
 	logger.Debug("RandomKey", l.RandomKey)
 	logger.Debug("InputHash", l.InputHash)
 	logger.Debug("targetBlock", l.FutureBlockHeight)
+	logger.Debug("targetBlockHash", l.TargetBlockHash)
 	logger.Debug("winnerList", l.WinnerList)
 	logger.Debug("script", l.Script)
 	logger.Debug("lotteryNote", l.LotteryNote)
@@ -592,7 +595,7 @@ func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) 
 
 	// Get the actual winner list
 	// winnerList, winnerListNames := DoDetermineWinner(le)
-	winnerIndexes := DoDetermineWinner(le)
+	winnerIndexes, targetBlockHash := DoDetermineWinner(le)
 	participantArray := strings.Split(le.MemberList, ",")
 	// winnerArray
 
@@ -612,6 +615,8 @@ func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) 
 	// logger.Info("Before asigning WinnerList%v\n", le)
 	le.WinnerList = winnerConcat
 	logger.Info("WinnerList ", winnerConcat)
+
+	le.TargetBlockHash = targetBlockHash
 
 	/* logger.Info("Winners: %s\n", winnerConcat) */
 	// logger.Info("Winners: %s\n", winnerConcat)

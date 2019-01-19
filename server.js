@@ -89,7 +89,9 @@ var connectedPeers = [
         "peer5.org1.example.com",
         "peer6.org1.example.com",
         ];
+
 var anchorPeer = "peer0.org1.example.com";
+var queryPeer = "peer2.org1.example.com";
 
 const kRestTimeout = 60000; // 60s
 
@@ -586,7 +588,7 @@ app.post('/subscribe', function(req, res) {
     var eventHash = "" + req.body.eventHash;
 
 
-    logger.debug(req);
+    // logger.debug(req);
     logger.debug("participantName", participantName);
     logger.debug("eventHash", eventHash);
     logger.debug("lotteryName", lotteryName);
@@ -623,52 +625,6 @@ app.post('/subscribe', function(req, res) {
     // var response = syncClient.get(requestURL, args);
 
 
-    // Existing method: Request identity from CA and then returns encrypted identity
-    var requestIdentityFromCA = function() {
-        var subscribeReq = client.post(SDKWebServerAddress + "/users", args, function (data, response) {
-            // parsed response body as js object
-            // console.log(data);
-            // raw response
-            token = data.token;
-            message = data.message;
-            secret = data.secret;
-
-            // console.log(response);
-            // logger.info("token: ", token);
-            // logger.info("message: ", message);
-            // logger.info("secret: ", secret);
-            // logger.info("response.alreadyEnrolled: ", response.alreadyEnrolled);
-            // logger.info("data.alreadyEnrolled: ", data.alreadyEnrolled);
-
-            if (data.alreadyEnrolled == true) {
-                logger.warn("%s is already enrolled", participantName);
-                res.status(408).send("응모 실패(이미 등록됨)");
-                return;
-            }
-            // sha256(token + participantName)
-
-            var sha256 = crypto.createHash('sha256');
-            var encryptedIdentity = sha256.update(token + participantName).digest('hex');
-
-            subscribeInvoke(encryptedIdentity);
-        });
-        subscribeReq.on('requestTimeout', function (req) {
-            logger.warn('응모 토큰 획득 실패');
-            // subscribeReq.abort();
-            res.status(408).send("응모 실패");
-            return;
-        });
-
-        subscribeReq.on('error', function(err) {
-            res.status(408).send("응모 실패");
-            logger.error(err);
-            return;
-        });
-    }
-
-    // requestIdentityFromCA(encryptedIdentity);
-
-
     // args[1] : Event hash (event identity) from client
     // args[2] : Member name(or identity) from client
     // args[3] : current timestamp from client
@@ -684,6 +640,7 @@ app.post('/subscribe', function(req, res) {
     
     console.log("Added", participantName);
     queue.enqueue(subscribeReqBody);
+    console.log("q size", queue.size());
 });
 
 function subscribeInvoke(req, next) {
@@ -715,6 +672,9 @@ function subscribeInvoke(req, next) {
         console.log("data", data);
         var tx_id = data.tx_id_string_;
         var payload = data.payload_;
+        console.log("error flag", data.flag);
+        console.log("error message" ,data.error_message);
+
 
         if (typeof payload !== "strings") {
             logger.debug("Typeof payload:", typeof payload);
@@ -735,8 +695,25 @@ function subscribeInvoke(req, next) {
         if (validateEmail(req.participantName)) {
             RegisterByEmail(req.participantName, req.lotteryName, req.eventHash, req.token);
         }
-        req.res.write(req.token);
-        req.res.end();
+
+        console.log("req.reses length", req.reses.length);
+        console.log("req.reses typeof", typeof req.reses);
+        var i = 0;
+        for (res of req.reses) {
+            if (data.flag == 1) {
+                res.send(500, {error : data.error_message});
+                // res.end();
+                continue;
+            }
+
+            // res.write(req.tokens[i], " 참여 성공!"); 
+            res.write(req.tokens[i] + " 참여 성공!"); 
+            console.log(req.tokens[i]);
+            ++i;
+            res.end();
+            // req.res.write(req.token);
+            // req.res.end();
+        }
 
         next();
     });
@@ -779,24 +756,50 @@ function checkSubscribeQueue() {
         return;
     }
 
+    var qsize = queue.size();
     var differentNumOfLottery = 0;
     var eventHashBag = {};
+    var indexMap = {};
+    var resMap = {};
+    var tokenMap = {};
+
+
+    // console.log("Process subscribe request batches in order", "queue size", queue.size());
+    // for (var i = 0; i < queue.size(); ++i) {
+        // queue.dequeue();
+    // }
 
     for (var i = 0; i < qsize; ++i) {
         var popped_item = queue.peek();
         if (typeof eventHashBag[popped_item.eventHash] === "undefined") {
+            console.log("New event hash", popped_item.eventHash);
             eventHashBag[popped_item.eventHash] = popped_item.participantName;
+            console.log(popped_item.eventHash, " added ", popped_item.participantName);
+            resMap[popped_item.eventHash] = new Array(popped_item.res);
+            // tokenMap[popped_item.eventHash] = new Array(GetRandomNonceStr(20));
+            tokenMap[popped_item.eventHash] = new Array(popped_item.participantName);
+            indexMap[differentNumOfLottery] = popped_item.eventHash;
+            // Get res
+            differentNumOfLottery++;
         } else {
-            eventHashBag[popped_item.eventHash] = "," + popped_item.participantName;
+            console.log("Existing event hash", popped_item.eventHash, " added ", popped_item.participantName);
+            eventHashBag[popped_item.eventHash] += "," + popped_item.participantName;
+            resMap[popped_item.eventHash].push(popped_item.res);
+            tokenMap[popped_item.eventHash].push(popped_item.participantName);
+            // popped_item.res.write("fuck");
+            // popped_item.res.end();
         }
-        differentNumOfLottery++;
         queue.dequeue();
     }
 
+    console.log("Popping all items in a queue", queue.size());
+    // console.log("Batched the following items");
+    // for (var e in eventHashBag) {
+        // console.log(e);
+    // }
+
     subscribe_sem.take(function(){
-        var qsize = queue.size();
         var cnt = 0;
-        console.log("Process subscribe request batches in order", "queue size", qsize);
 
         async.whilst(
             function () {
@@ -808,12 +811,25 @@ function checkSubscribeQueue() {
                 return cnt < differentNumOfLottery;
             },
             function (next) {
-                var subItem = Object.entries(eventHashBag)[cnt];
+                // next eventHash
+                var eventHash = indexMap[cnt];
+                var participants = eventHashBag[eventHash];
+                var reses = resMap[eventHash];
+                var tokens = tokenMap[eventHash];
+                // for (res of reses) {
+                    // res.write
+                // }
                 cnt++;
-                var popped_item = queue.peek();
-                queue.dequeue();
-                console.log("Dequeued item", popped_item.participantName);
-                subscribeInvoke(popped_item, next)
+                var sub_tx_req = {
+                    eventHash: eventHash,
+                    participantName : participants,
+                    tokens : tokens,
+                    lotteryName : "NA",
+                    reses: reses,
+                }
+                console.log(eventHash, " batched ", participants);
+
+                subscribeInvoke(sub_tx_req, next)
                 // next();
             },
             function (err) {
@@ -829,7 +845,7 @@ function simulateSubs() {
     queue.enqueue(randomIdentity);
 }
 
-setInterval(checkSubscribeQueue, 200)
+setInterval(checkSubscribeQueue, 2000)
 // setInterval(simulateSubs, 1000)
 
 function RegisterByEmail(participantName, lotteryName, eventHash, token) {
@@ -875,6 +891,7 @@ app.post('/open', function(req, res) {
     var numOfMembers = req.body.numOfMembers;
     var latestBlock = req.body.latestBlock;
     var targetBlockNumber = req.body.targetBlockNumber;
+    var targetBlockHash = req.body.targetBlockHash;
     var issueDate = req.body.issueDate;
     var dueDate = req.body.dueDate;
     var lotteryNote = req.body.lotteryNote;

@@ -1,7 +1,7 @@
 var blockQueryBaseURL = "https://api.blockcypher.com/v1/btc/main/blocks/";
-// var hostURL = "http://192.168.0.13:1185";
+var hostURL = "http://192.168.0.13:1185";
 // var hostURL = "http://localhost:1185";
-var hostURL = "http://141.223.121.56:1185";
+// var hostURL = "http://141.223.121.56:1185";
 // 하나의 추첨 행사에 대해 다음과 같은 정보를 획득하기
 // Lottery structure. got this when clicking the row
 var gLottery;
@@ -511,7 +511,6 @@ $(document).ready(function() {
 
             var initTabledata = [ ];
             for (var i = 0; i < res.length; ++i) {
-                // JSON library cannot parse a unicode-encoded string
                 var obj = JSON.parse(res[i]);
                 var tsAnnouncementDate = obj.AnnouncementDate;
 
@@ -541,6 +540,7 @@ $(document).ready(function() {
                     status : obj.Status,
                     eventHash : obj.InputHash,
                     targetBlock : obj.FutureBlockHeight,
+                    targetBlockHash : obj.TargetBlockHash,
                     issueDate : obj.IssueDate,
                     dueDate : obj.Duedate,
                     randomKey : obj.RandomKey,
@@ -653,6 +653,8 @@ $(document).ready(function() {
             {title:"참여", headerSort:false, field:"subscribe", formatter:printSubscribeIcon, align:"center", width:"4px", 
                 cellClick:function(e, cell){
                     var lotteryName = cell.getRow().getData().name;
+                    var eventHash = cell.getRow().getData().eventHash;
+                    var lotteryName = cell.getRow().getData().name;
                     // Validate by timestamp of announcement date
                     // var ts = cell.getRow().getData().tsAnnouncementDate;
                     // var curr_ts = Math.floor(Date.now() / 1000);
@@ -668,12 +670,10 @@ $(document).ready(function() {
                     //
                     //
                     
-                    console.log("testing");
-                    test_subscribe_generator("tester123123", "ffa103cdc7fde9c7a08bc25d52bf359f1662ac5369ac47d8d2010a3e5c9358e1")
-                    return;
 
                     // Validate by status
                     var status = cell.getRow().getData().status;
+                    console.log(status);
                     if(status == "CHECKED") {
                         swal({type:"error", title:"이미 추첨되었습니다",
                             confirmButtonText: '확인',
@@ -684,17 +684,20 @@ $(document).ready(function() {
 
 
                     Swal({
-                        title: '(' + lotteryName + ')' + '\n이름 또는 이메일을 입력하세요',
-                        html: "이메일을 입력하면, 이메일로 토큰이 전송됩니다<br>(<b>참여자의 익명성이 보장됩니다</b>)",
+                        // title: '(' + lotteryName + ')' + '\n이름 또는 이메일을 입력하세요',
+                        title: '(' + lotteryName + ')' + '\n이름을 입력하세요',
+                        // html: "이메일을 입력하면, 이메일로 토큰이 전송됩니다<br>(<b>참여자의 익명성이 보장됩니다</b>)",
                         type: 'question',
                         input: 'text',
                         inputPlaceholder: '이름 혹은 이메일',
+                        inputPlaceholder: '이름',
                         showCancelButton: true,
                         confirmButtonText: '응모',
                         cancelButtonText: '취소'
                     }).then((result) => {
                         showSpinner();
                         if (result.value) {
+                            // Input validation
                             var functionName = "subscribe";
                             var participantName = result.value;
                             if (participantName.indexOf(',') > -1 || participantName.indexOf('*') > -1) {
@@ -702,8 +705,11 @@ $(document).ready(function() {
                                 hideSpinner();
                                 return;
                             }
-                            var lotteryName = cell.getRow().getData().name;
-                            var eventHash = cell.getRow().getData().eventHash;
+                            if (validateEmail(participantName)) {
+                                Swal("이메일 인증 기능은 본 데모에서는 지원하지 않습니다.")
+                                hideSpinner();
+                                return;
+                            }
                             // 보내기
                             var allData = {
                                 "functionName" : functionName,
@@ -726,19 +732,25 @@ $(document).ready(function() {
                                             '참여 성공',
                                             "<b>\"" + participantName + "\" </b>님이 " 
                                             + "<b>\"" + lotteryName + "\"" + ' </b>행사에 등록!'
-                                            + "<br/>인증토큰" + responseData + "<br/><b><font color=\"red\">인증토큰은 당첨자임를 증명하기 위해서 반드시 갖고 있어야 합니다</font><br/>(복사해두세요)</b>",
+                                            ,
+                                            // + "<br/>인증토큰" + responseData + "<br/><b><font color=\"red\">인증토큰은 당첨자임를 증명하기 위해서 반드시 갖고 있어야 합니다</font><br/>(복사해두세요)</b>",
                                             'success'
-                                        )
+                                        ).then(() => {
+                                            window.location.reload();
+                                        });
                                     }
 
                                     hideSpinner();
                                 },
-                                error: function() {
+                                error: function(req, status, error) {
                                     Swal(
-                                        '참여!',
                                         '참가자 등록 실패',
+                                        req.responseText + "(e.g., duplicate participation)",
                                         'error'
                                     )
+                                    console.log(req.responseText);
+                                    console.log(status);
+                                    console.log(error);
                                     hideSpinner();
                                 }
                             })
@@ -921,23 +933,23 @@ $(document).ready(function() {
                     // Validate appropriate date
                     var ts = cell.getRow().getData().tsAnnouncementDate;
                     var curr_ts = getCurrentTimestamp();
-                    if (curr_ts <= ts) {
-                        Swal({type:"error", title:"발표일이 지나야 합니다",
-                            confirmButtonText: '확인',
-                            cancelButtonText: '취소',
-                        });
-                        return;
-                    }
+                    // if (curr_ts <= ts) {
+                        // Swal({type:"error", title:"발표일이 지나야 합니다",
+                            // confirmButtonText: '확인',
+                            // cancelButtonText: '취소',
+                        // });
+                        // return;
+                    // }
 
                     // Validate participants
-                    var kRegistered = cell.getRow().getData().numOfRegistered;
-                    if(kRegistered == 0) {
-                        swal({type:"error", title:"참가자가 아무도 없습니다",
-                            confirmButtonText: '확인',
-                            cancelButtonText: '취소',
-                        });
-                        return;
-                    } 
+                    // var kRegistered = cell.getRow().getData().numOfRegistered;
+                    // if(kRegistered == 0) {
+                        // swal({type:"error", title:"참가자가 아무도 없습니다",
+                            // confirmButtonText: '확인',
+                            // cancelButtonText: '취소',
+                        // });
+                        // return;
+                    // } 
 
                     var status = cell.getRow().getData().status;
                     if(status != "CHECKED") {
@@ -956,10 +968,11 @@ $(document).ready(function() {
 
 
                     var outputText = 
-                        '<input id="participantName" placeholder="참여자 등록 이름" style="width:100%;" class="swal2-input">' +
-                        '<input id="authToken" placeholder="인증 토큰" style="float:left; width:100%;" class="swal2-input">' 
-                    + '<div onclick="showList()" style="cursor:pointer"><font color="DarkBlue">당첨자 명단 확인</font></div>'
-                    + '<div id="showListText" style="display:none;">'
+                        // '<input id="participantName" placeholder="참여자 등록 이름" style="width:100%;" class="swal2-input">' +
+                        // '<input id="authToken" placeholder="인증 토큰" style="float:left; width:100%;" class="swal2-input">' 
+                    '<div clicked onclick="showList()" style="cursor:pointer"><font color="DarkBlue"></font></div>'
+                    // '<div onclick="showList()" style="cursor:pointer"><font color="DarkBlue">당첨자 명단 확인</font></div>'
+                    // + '<div id="showListText" style="display:none;">'
 
                     for (var i = 0; i < numOfWinners; ++i) {
                         outputText += "<font color=\"red\">" + (i+1) + "</font> " + winnerListArray[i] + "<br>";
@@ -968,7 +981,7 @@ $(document).ready(function() {
 
 
                     swal({
-                        title: "("+ lotteryName + ")</br>당첨자 및 결과 확인</br>",
+                        title: "(행사명: "+ lotteryName + ")</br>결과 확인</br>",
                         html: outputText,
                         focusConfirm: false,
                         preConfirm: () => {
@@ -977,7 +990,7 @@ $(document).ready(function() {
                                 authToken : document.getElementById('authToken').value,
                             };
                         },
-                        confirmButtonText: '당첨 여부 확인',
+                        // confirmButtonText: '당첨 여부 확인',
                         cancelButtonText: '취소',
                         // text: outputText,
                         width: 400,
@@ -1097,19 +1110,20 @@ $(document).ready(function() {
 
                     var lotteryName = cell.getRow().getData().name;
                     var targetBlock = cell.getRow().getData().targetBlock;
+                    var targetBlockHash = cell.getRow().getData().targetBlockHash;
                     var participantList = cell.getRow().getData().participantList;
 
 
                     // Validate appropriate date
-                    var ts = cell.getRow().getData().tsAnnouncementDate;
-                    var curr_ts = getCurrentTimestamp();
-                    if (curr_ts <= ts) {
-                        Swal({type:"error", title:"발표일이 지나야 합니다",
-                            confirmButtonText: '확인',
-                            cancelButtonText: '취소',
-                        });
-                        return;
-                    }
+                    // var ts = cell.getRow().getData().tsAnnouncementDate;
+                    // var curr_ts = getCurrentTimestamp();
+                    // if (curr_ts <= ts) {
+                        // Swal({type:"error", title:"발표일이 지나야 합니다",
+                            // confirmButtonText: '확인',
+                            // cancelButtonText: '취소',
+                        // });
+                        // return;
+                    // }
 
                     // Validate participants
                     var kRegistered = cell.getRow().getData().numOfRegistered;
@@ -1130,19 +1144,19 @@ $(document).ready(function() {
                     var numOfWinners = cell.getRow().getData().numOfWinners;
                     var verification = false;
                     var outputhtml =
-                        '<div><input type="checkbox" id="randomSourceVrfy" value="randomSource" checked> \
+                        '<div><input type="checkbox" disabled="true" id="randomSourceVrfy" value="randomSource" > \
                         <label for="randomSourceVrfy"><span data-toggle="tooltip" title="' + textRandomSourceVrfy + '">랜덤 소스 검증</span></label></div>' +
 
-                        '<div><input type="checkbox" id="infoVrfy" value="info" checked> \
+                        '<div><input type="checkbox" disabled="true" id="infoVrfy" value="info" > \
                         <label for="infoVrfy"><span data-toggle="tooltip" title="'+ textInfoVrfy +'">행사 정보 무결성 검증</span></label></div>' +
 
                         '<div><input type="checkbox" id="winnerVrfy" value="winner" checked> \
-                        <label for="winnerVrfy"><span data-toggle="tooltip" title="' +textWinnerVrfy +'">당첨자 목록 검증</span></label></div>' +
+                        <label for="winnerVrfy"><span data-toggle="tooltip" title="' +textWinnerVrfy +'"><font color="red">당첨자 목록 검증</font></span></label></div>' +
 
-                        '<div><input type="checkbox" id="responseVrfy" value="response" checked> \
+                        '<div><input type="checkbox" disabled="true" id="responseVrfy" value="response" > \
                         <label for="responseVrfy"><span data-toggle="tooltip" title="'+textResponseVrfy+'">응답 값 비교 검증</span></label></div>' +
 
-                        '<div><input type="checkbox" id="statVrfy" value="stat" checked> \
+                        '<div><input type="checkbox" disabled="true" id="statVrfy" value="stat" > \
                         <label for="statVrfy"><span data-toggle="tooltip" title="'+textStatVrfy+'">통계적 검증</span></label></div>'
 
 // <span data-toggle='tooltip' title=''>" + eventHash + "</span>
@@ -1281,13 +1295,13 @@ $(document).ready(function() {
                                             console.log("당첨자 명단 검증 실패");
                                             finalHtmlOutput += "<font color='red'></b>실패</b></font></div>";
                                         }
-                                        finalHtmlOutput += "<div>랜덤 소스, 참가자 수, 당첨자 수, 그리고 추첨 스크립트(Fisher-Yates random shuffling)를 사용하여 당첨자를 계산한 결과는 다음과 같습니다";
+                                        finalHtmlOutput += "<div>랜덤 소스(타겟 블록의 해시 값), 참가자 수, 당첨자 수, 그리고 추첨 스크립트(Fisher-Yates random shuffling)를 사용하여 당첨자를 계산한 결과는 다음과 같습니다";
 
                                         finalHtmlOutput += "<div><b>랜덤 소스: " + verifyResult.blockHash + "</b></div>"
                                         finalHtmlOutput += "<div><b>참가자 수: " + verifyResult.numOfParticipants + "</b></div>"
                                         finalHtmlOutput += "<div><b>당첨자 수: " + verifyResult.numOfWinners + "</b></div>"
-                                        finalHtmlOutput += "<div><b>당첨자 명단: " + verifyResult.winnerListArray + "</b></div><br>"
-                                        finalHtmlOutput += "<div><b>계산 결과: " + verifyResult.calculatedWinnerList + "</b></div><br>"
+                                        finalHtmlOutput += "<div><b>기록된 당첨자 명단: " + verifyResult.winnerListArray + "</b></div><br>"
+                                        finalHtmlOutput += "<div><b>직접 계산한 결과: " + verifyResult.calculatedWinnerList + "</b></div><br>"
                                         finalHtmlOutput += "<br><br>";
                                     },
                                 });
@@ -1937,6 +1951,7 @@ $(document).ready(function() {
             {title:"이벤트해시", field:"eventHash", align:"center", width:"12px",headerSort:false },
             {title:"상태", field:"status", align:"center", width:"8px",headerSort:false},
             {title:"타겟 블록", field:"targetBlock", align:"center", width:"8px",headerSort:false},
+            {title:"타겟 블록 해시", field:"targetBlockHash", align:"center", width:"8px",headerSort:false},
             {title:"등록일", field:"issueDate", align:"center", width:"8px",headerSort:false},
             {title:"마감일", field:"dueDate", align:"center", width:"8px",headerSort:false},
             {title:"랜덤키", field:"randomKey", align:"center", width:"8px",headerSort:false},
@@ -1971,6 +1986,7 @@ $(document).ready(function() {
         $("#allQueryTableReserved").tabulator("hideColumn","tsAnnounceDate");
         $("#allQueryTableReserved").tabulator("hideColumn", "status");
         $("#allQueryTableReserved").tabulator("hideColumn", "targetBlock");
+        $("#allQueryTableReserved").tabulator("hideColumn", "targetBlockHash");
         $("#allQueryTableReserved").tabulator("hideColumn","issueDate");
         $("#allQueryTableReserved").tabulator("hideColumn","dueDate");
         $("#allQueryTableReserved").tabulator("hideColumn","verifiableRandomKey");
@@ -2029,8 +2045,13 @@ $(document).ready(function() {
                     }).done(function(json) {
                         const NumOfMaxMembers = 9999;
                         var latestBlock = json.height;
-
+                        console.log("json hash", json.hash);
                         var targetBlockNumber = (Number(result.value.targetBlockOffset) + Number(latestBlock)).toString();
+                        var targetBlockHash = null;
+                        console.log(json);
+                        if (targetBlockNumber == latestBlock) {
+                            targetBlockHash = json.hash;
+                        }
                         var numOfWinners = result.value.numOfWinners;
                         var numOfMembers = NumOfMaxMembers;
                         var eventName = result.value.eventName;
@@ -2050,6 +2071,7 @@ $(document).ready(function() {
                         var eventHash = "";
 
                         console.log("Latest block: " + latestBlock);
+                        console.log("Latest hash: " + targetBlockHash);
                         // console.log("eventHash: " + eventHash);
 
                         var allData = {
@@ -2059,6 +2081,7 @@ $(document).ready(function() {
                             "expectedAnnouncementDate" : expectedAnnouncementDate,
                             "latestBlock" : latestBlock,
                             "targetBlockNumber" : targetBlockNumber,
+                            "targetBlockHash" : targetBlockHash,
                             "numOfMembers" : numOfMembers,
                             "numOfWinners" : numOfWinners,
                             "eventName" : eventName,
@@ -2076,10 +2099,13 @@ $(document).ready(function() {
                                     title: "등록 완료",
                                     confirmButtonText: '확인',
                                     html: outputText,
+                                }).then(()=> {
+                                    window.location.reload();
                                 });
+                                hideSpinner();
+                                //
                                 // Unpack responseData
                                 // Table update
-                                hideSpinner();
                             },
                             error: function() {
                                 Swal({ 

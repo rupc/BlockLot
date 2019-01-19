@@ -73,8 +73,12 @@ func (t *SimpleChaincode) subscribe(stub shim.ChaincodeStubInterface, args []str
 		le.MemberList += "," + args[2]
 	}
 
-	kRegisted, err := strconv.Atoi(le.NumOfRegistered)
-	le.NumOfRegistered = strconv.Itoa(kRegisted + 1)
+	// Remove redundant double-commas
+	strings.Replace(le.MemberList, ",,", "", -1)
+	kRegisted := strings.Count(le.MemberList, ",") + 1
+
+	// kRegisted, err := strconv.Atoi(le.NumOfRegistered)
+	le.NumOfRegistered = strconv.Itoa(kRegisted)
 
 	logger.Info("NumOfRegistered: %s\n", le.NumOfRegistered)
 

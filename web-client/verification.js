@@ -194,12 +194,14 @@ function vrfyWinner(lottery) {
     var numOfParticipants = lottery.numOfRegistered;
     var numOfWinners = lottery.numOfWinners;
     var targetBlock = lottery.targetBlock;
+    var targetBlockHash = lottery.targetBlockHash; // Using locally cached hash
     var winnerListNames = lottery.winnerList;
     var participantList = lottery.participantList;
 
     console.log("numOfParticipants", numOfParticipants);
     console.log("numOfWinners", numOfWinners);
     console.log("targetBlock", targetBlock);
+    console.log("targetBlockHash", targetBlockHash);
     console.log("winnerListNames", winnerListNames);
     console.log("participantList", participantList);
 
@@ -213,51 +215,66 @@ function vrfyWinner(lottery) {
 
     var url = getBlockByHeight(targetBlock);
     var calculatedWinnerList = [];
-    var blockHash;
     var concatWinnerList = "";
-    $.ajax({
-        url: url,
-        type: "GET", 
-        dataType: 'json',
-        contentType: 'text/plain',
-        async: false,
-        headers: {
-            'Access-Control-Allow-Origin': '*'
-        },
-        crossDomain:true,
-        success: function(responseData) {
-            blockHash = responseData.blocks[0].hash;
-            // calculated winners
-            var winnerList = drawByFisherYatesShuffle(numOfParticipants, numOfWinners, blockHash);
-            console.log(blockHash);
+    var winnerList = drawByFisherYatesShuffle(numOfParticipants, numOfWinners, targetBlockHash);
+    console.log(targetBlockHash);
 
 
-            for (var i = 0; i < numOfWinners; ++i) {
-                console.log(participantArray[winnerList[i]], " vs ", winnerListArray[i]);
-                if (participantArray[winnerList[i]] != winnerListArray[i]) {
-                    successFlag = false;
-                    break;
-                }
-                calculatedWinnerList.push(participantArray[winnerList[i]]);
-            }
+    for (var i = 0; i < numOfWinners; ++i) {
+        console.log(participantArray[winnerList[i]], " vs ", winnerListArray[i]);
+        if (participantArray[winnerList[i]] != winnerListArray[i]) {
+            successFlag = false;
+            break;
+        }
+        calculatedWinnerList.push(participantArray[winnerList[i]]);
+    }
 
-            for (var i = 0; i < winnerList.length; ++i) {
-                console.log(winnerList[i], participantArray[winnerList[i]]);
-                concatWinnerList += i+1 + ":" + participantArray[winnerList[i]] + ", ";
-            }
+    for (var i = 0; i < winnerList.length; ++i) {
+        console.log(winnerList[i], participantArray[winnerList[i]]);
+        concatWinnerList += i+1 + ":" + participantArray[winnerList[i]] + ", ";
+    }
+    // $.ajax({
+        // url: url,
+        // type: "GET", 
+        // dataType: 'json',
+        // contentType: 'text/plain',
+        // async: false,
+        // headers: {
+            // 'Access-Control-Allow-Origin': '*'
+        // },
+        // crossDomain:true,
+        // success: function(responseData) {
+            // blockHash = responseData.blocks[0].hash;
+            // var winnerList = drawByFisherYatesShuffle(numOfParticipants, numOfWinners, blockHash);
+            // console.log(blockHash);
+
+
+            // for (var i = 0; i < numOfWinners; ++i) {
+                // console.log(participantArray[winnerList[i]], " vs ", winnerListArray[i]);
+                // if (participantArray[winnerList[i]] != winnerListArray[i]) {
+                    // successFlag = false;
+                    // break;
+                // }
+                // calculatedWinnerList.push(participantArray[winnerList[i]]);
+            // }
+
+            // for (var i = 0; i < winnerList.length; ++i) {
+                // console.log(winnerList[i], participantArray[winnerList[i]]);
+                // concatWinnerList += i+1 + ":" + participantArray[winnerList[i]] + ", ";
+            // }
 
             // successFlag = true;
-        },
-        error: function() {
-            Swal("Fail");
-        }
-    });
+        // },
+        // error: function() {
+            // Swal("Fail");
+        // }
+    // });
 
     return {
         numOfParticipants : numOfParticipants,
         numOfWinners: numOfWinners,
         targetBlock : targetBlock,
-        blockHash : blockHash,
+        blockHash : targetBlockHash,
         successFlag: successFlag,
         calculatedWinnerList: concatWinnerList,
         // concatWinnerList: concatWinnerList,

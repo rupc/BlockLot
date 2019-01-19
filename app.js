@@ -330,9 +330,18 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', async function(req,
 		return;
 	}
 
-	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, fcn, args, req.username, req.orgname);
+	try {
+        let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, fcn, args, req.username, req.orgname);
+        res.send(message);
+    } catch (error) {
+        var error_message = {};
+        logger.error('Failed to invoke due to error: ' + error.stack ? error.stack : error);
+        logger.error(error.toString());
+        error_message.flag = 1;
+        error_message.error_message = error.toString();
+        res.send(error_message);
+    }
     // console.log(message.payload_) ;
-	res.send(message);
 });
 // Query on chaincode on target peers
 app.get('/channels/:channelName/chaincodes/:chaincodeName', async function(req, res) {
