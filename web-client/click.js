@@ -670,7 +670,9 @@ $(document).ready(function() {
                     //
                     //
                     
-
+                    // console.log(eventHash);
+                    // test_subscribe_generator(eventHash);
+                    // return;
                     // Validate by status
                     var status = cell.getRow().getData().status;
                     console.log(status);

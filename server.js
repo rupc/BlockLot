@@ -1300,8 +1300,21 @@ if (cmd_options.blockchain) {
 
 }
 
+var cachedLotteries = {};
+var refreshRequired = true; // initially true 
+
+function clone(a) {
+   return JSON.parse(JSON.stringify(a));
+}
 
 function QueryAllEvents(req, res) {
+    if (!refreshRequired) {
+        logger.debug("Response cached data")
+        res.write(JSON.stringify(cachedLotteries));
+        res.end();
+        return 
+    }
+
     var headerData = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
@@ -1352,6 +1365,10 @@ function QueryAllEvents(req, res) {
         };
 
         // console.log(payload);
+        console.log("Cloned recent lotteries");
+        cachedLotteries = clone(payload);
+        refreshRequired = false;
+
         console.log(JSON.stringify(payload));
         res.write(JSON.stringify(payload));
         res.end();
