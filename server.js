@@ -939,6 +939,9 @@ app.post('/open', function(req, res) {
     var openReq = client.post(SDKWebServerAddress + "/channels/mychannel/chaincodes/lottery", args, function (data, response) {
         console.log("data", data);
         var tx_id = data.tx_id_string_;
+        console.log("AFTER OPEN", JSON.parse(data.payload_));
+        // refreshRequired = true;
+        updateLocalCache(cachedLotteries, JSON.parse(data.payload_));
         // console.log("response", response);
         res.write(tx_id);
         res.end();
@@ -1001,6 +1004,8 @@ app.post('/draw', function(req, res) {
         var payload = data.payload_;
         console.log("transaction id " + tx_id);
         console.log("payload : " + data.payload_);
+        // refreshRequired = true;
+        updateLocalCache(cachedLotteries, JSON.parse(data.payload_));
         res.write(payload);
         res.end();
     });
@@ -1308,17 +1313,18 @@ if (cmd_options.blockchain) {
 
 var cachedLotteries = {};
 var refreshRequired = true; // initially true 
+var firstLoading = true;
 
 function clone(a) {
    return JSON.parse(JSON.stringify(a));
 }
 
 function QueryAllEvents(req, res) {
-    if (!refreshRequired || cachedLotteries === null ) {
+    if (!refreshRequired || firstLoading || cachedLotteries === null) {
         // logger.debug("cachedLotteries type", typeof cachedLotteries)
         // logger.debug("cachedLotteries contents", cachedLotteries)
         // logger.debug("cachedLotteries ccPayload", cachedLotteries.ccPayload)
-
+        firstLoading = false;
         res.write(JSON.stringify(cachedLotteries));
         res.end();
         return 
@@ -1397,6 +1403,7 @@ function selectScript() {
 
 
 // updateLocalCache should support a replacement of an old lottery event
+// Currently, it only needs to called in query and subscribe, not open and draw
 function updateLocalCache(cachedWhole, updatedLottery) {
     var res = cachedLotteries.ccPayload.split("*");
     // console.log("BEFORE splice op. res", res);

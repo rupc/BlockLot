@@ -300,7 +300,7 @@ func (t *SimpleChaincode) create_lottery_event_hash(stub shim.ChaincodeStubInter
 		return shim.Error(err.Error())
 	}
 
-	return shim.Success(nil)
+	return shim.Success(jsonBytes)
 }
 
 func GetStateInt(stub shim.ChaincodeStubInterface, key string) int {
@@ -644,7 +644,8 @@ func (t *SimpleChaincode) draw(stub shim.ChaincodeStubInterface, args []string) 
 
 	logger.Info("Successfully returned winnerList")
 
-	return shim.Success([]byte(winnerConcat))
+	// return shim.Success([]byte(winnerConcat))
+	return shim.Success(jsonBytes)
 }
 
 func (t *SimpleChaincode) verify_result(stub shim.ChaincodeStubInterface, args []string) pb.Response {

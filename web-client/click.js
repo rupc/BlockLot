@@ -495,6 +495,12 @@ $(document).ready(function() {
         data: "",
         success: function(responseData) {
             var sdkInfo = JSON.parse(responseData).sdkPayload;
+            if (typeof JSON.parse(responseData).ccPayload === "undefined") {
+                // console.log(responseData);
+                console.log("responseData is null!", typeof responseData.ccPayload);
+                hideSpinner();
+                return;
+            }
             console.log(JSON.parse(responseData).ccPayload);
             var res = JSON.parse(responseData).ccPayload.split("*");
             // console.log(responseData);
@@ -571,7 +577,7 @@ $(document).ready(function() {
                 // printQueryInfo();
             }
 
-            // Redrwa the table
+            // Redraw the table
             $("#allQueryTableReserved").tabulator("setData", initTabledata);
             hideSpinner();
         },
@@ -900,12 +906,14 @@ $(document).ready(function() {
                                     left top
                                     no-repeat
                                   `
+                                    }).then(()=> {
+                                        var rowIndex = cell.getRow().getIndex();
+                                        $("#allQueryTableReserved").tabulator("updateData", [{id:rowIndex, status:"CHECKED", winnerList:responseData}]); //update data
+                                        window.location.reload();
                                     });
-
-                                    var rowIndex = cell.getRow().getIndex();
-                                    $("#allQueryTableReserved").tabulator("updateData", [{id:rowIndex, status:"CHECKED", winnerList:responseData}]); //update data
-
                                     hideSpinner();
+
+
                                 },
                                 error: function() {
                                     Swal(
