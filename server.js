@@ -571,6 +571,7 @@ app.post('/counterfeit', function(req, res) {
         var tx_id = data.tx_id_string_;
         // console.log("response", response);
         // res.write(tx_id);
+        updateLocalCache(cachedLotteries, JSON.parse(data.payload_));
         res.write("조작 성공");
         res.end();
     });
@@ -940,8 +941,8 @@ app.post('/open', function(req, res) {
         console.log("data", data);
         var tx_id = data.tx_id_string_;
         console.log("AFTER OPEN", JSON.parse(data.payload_));
-        // refreshRequired = true;
-        updateLocalCache(cachedLotteries, JSON.parse(data.payload_));
+        refreshRequired = true;
+        // updateLocalCache(cachedLotteries, JSON.parse(data.payload_));
         // console.log("response", response);
         res.write(tx_id);
         res.end();

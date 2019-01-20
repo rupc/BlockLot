@@ -889,7 +889,7 @@ $(document).ready(function() {
                                 success: function(responseData) {
                                     var outputText = 
                                         "<b>" +
-                                        responseData +
+                                        JSON.parse(responseData).WinnerList +
                                         "</b>"
                                         ;
 

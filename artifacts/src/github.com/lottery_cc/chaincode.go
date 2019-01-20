@@ -395,7 +395,7 @@ func (t *SimpleChaincode) counterfeit(stub shim.ChaincodeStubInterface, args []s
 		return shim.Error(err.Error())
 	}
 
-	return shim.Success(nil)
+	return shim.Success(jsonBytes)
 }
 
 // 7 args: function name, event name, Duedate, # of members, # of winner, comma seperated member list, random key.. but it could be one with long json string
