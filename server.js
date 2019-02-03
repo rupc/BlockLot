@@ -827,6 +827,7 @@ function checkSubscribeQueue() {
                     // res.write
                 // }
                 cnt++;
+<<<<<<< HEAD
                 var sub_tx_req = {
                     eventHash: eventHash,
                     participantName : participants,
@@ -838,6 +839,13 @@ function checkSubscribeQueue() {
 
                 subscribeInvoke(sub_tx_req, next)
                 // next();
+=======
+                var popped_item = queue.peek();
+                queue.dequeue();
+                console.log("Dequeued item", popped_item.participantName);
+                // next() called inside subscribeInvoke()
+                subscribeInvoke(popped_item, next)
+>>>>>>> master
             },
             function (err) {
                 console.log("error", err);
