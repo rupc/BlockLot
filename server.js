@@ -641,6 +641,7 @@ app.post('/subscribe', function(req, res) {
     
     console.log("Added", participantName);
     queue.enqueue(subscribeReqBody);
+    console.log(subscribeReqBody);
     console.log("q size", queue.size());
 });
 
@@ -649,6 +650,7 @@ app.post('/subscribe', function(req, res) {
 function subscribeInvoke(req, next) {
     // console.log("Invoked with", req);
     var current_ts = "" + Math.floor(Date.now() / 1000);
+    console.log(req);
     var allData1 = {
         "peers" : ["peer0.org1.example.com","peer1.org1.example.com"],
         "fcn" : "invoke",
@@ -834,15 +836,17 @@ function checkSubscribeQueue() {
                     lotteryName : "NA",
                     reses: reses,
                 }
-                console.log(eventHash, " batched ", participants);
+                // console.log(eventHash, " batched ", participants);
+                console.log("얘도 같이 널이냐?");
+                console.log(sub_tx_req);
 
                 subscribeInvoke(sub_tx_req, next)
                 // next();
                 var popped_item = queue.peek();
                 queue.dequeue();
-                console.log("Dequeued item", popped_item.participantName);
+                // console.log("Dequeued item", popped_item.participantName);
                 // next() called inside subscribeInvoke()
-                subscribeInvoke(popped_item, next)
+                // subscribeInvoke(popped_item, next)
             },
             function (err) {
                 console.log("error", err);
