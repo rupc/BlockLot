@@ -37,7 +37,7 @@
     "moment": "^2.22.1",
     "node-cmd": "^3.0.0",
     "node-rest-client": "^3.1.0",
-    "nodemailer": "^4.6.6",
+    "nodemailer": "^6.4.16",
     "queue-fifo": "^0.2.6",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
