@@ -32,7 +32,7 @@
     "gonode": "^0.1.2",
     "html-pdf": "^2.2.0",
     "json-stringify-pretty-compact": "^1.2.0",
-    "jsonwebtoken": "^7.3.0",
+    "jsonwebtoken": "^9.0.0",
     "log4js": "^0.6.38",
     "moment": "^2.22.1",
     "node-cmd": "^3.0.0",
